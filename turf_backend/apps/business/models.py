@@ -1,11 +1,10 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser , PermissionsMixin , BaseUserManager
+import secrets
 
-class BusinessClientManager(BaseUserManager):
-    def create_user(
-        self, business_email, business_phone, password=None, **extra_fields
-    ):
+class BusinessUserManager(BaseUserManager):
+    def create_user(self , business_email , business_phone , password=None , **extra_fields):
         if not business_email:
             raise ValueError("Business email is required")
 
@@ -20,7 +19,7 @@ class BusinessClientManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-class BusinessClient(AbstractBaseUser, PermissionsMixin):
+class BusinessUser(AbstractBaseUser, PermissionsMixin):
     business_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
@@ -33,22 +32,20 @@ class BusinessClient(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    groups = models.ManyToManyField(
-        "auth.Group",
-        related_name="businessclient_set",
+    groups = models.ManyToManyField("auth.Group",
+        related_name="businessuser_set",
         blank=True,
         help_text="The groups this user belongs to.",
         verbose_name="groups",
     )
-    user_permissions = models.ManyToManyField(
-        "auth.Permission",
-        related_name="businessclient_user_set",
+    user_permissions = models.ManyToManyField("auth.Permission",
+        related_name="business_user_set",
         blank=True,
         help_text="Specific permissions for this user.",
         verbose_name="user permissions",
     )
 
-    objects = BusinessClientManager()
+    objects = BusinessUserManager()
     USERNAME_FIELD = "business_email"
     REQUIRED_FIELDS = ["business_phone", "business_name"]
 
@@ -57,3 +54,22 @@ class BusinessClient(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.business_name} ({self.business_email})"
+
+class BusinessUserToken(models.Model):
+    key = models.CharField(max_length=40, primary_key=True)
+    business_user = models.OneToOneField(BusinessUser,
+        related_name="auth_token",
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "business_user_token"
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = secrets.token_hex(20)
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Token for {self.business_user.business_email}"
