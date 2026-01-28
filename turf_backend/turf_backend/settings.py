@@ -5,9 +5,6 @@ from urllib.parse import urlparse, parse_qsl
 
 load_dotenv()
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
-
-
-load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-kit49^ppt%%+7_kbjds^tai6@k7ffh7nlo6kac48jpc5_le-vh'
 DEBUG = True
@@ -24,7 +21,7 @@ INSTALLED_APPS = [
     'apps.business',
     'django.contrib.postgres',
     'rest_framework',
-    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -96,16 +93,16 @@ from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "USER_ID_FIELD": "user_id",
     "USER_ID_CLAIM": "user_id",
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 
 REST_FRAMEWORK = {
+  'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
     ],
