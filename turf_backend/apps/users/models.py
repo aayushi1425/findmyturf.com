@@ -1,5 +1,5 @@
-from django.db import models
 import uuid
+from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 class UserManager(BaseUserManager):
@@ -53,6 +53,21 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    groups = models.ManyToManyField(
+        "auth.Group",
+        related_name="user_set",
+        blank=True,
+        help_text="The groups this user belongs to.",
+        verbose_name="groups",
+    )
+    user_permissions = models.ManyToManyField(
+        "auth.Permission",
+        related_name="user_user_set",
+        blank=True,
+        help_text="Specific permissions for this user.",
+        verbose_name="user permissions",
+    )
 
     objects = UserManager()
 
