@@ -22,12 +22,12 @@ class BusinessRegister(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class GetBusinessProfile(APIView):
+class BusinessProfile(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, pk):
         try:
-            business = BusinessUser.objects.get(user=request.user)
+            business = BusinessUser.objects.get(pk=pk, user=request.user)
         except BusinessUser.DoesNotExist:
             return Response(
                 {"detail": "Business profile not found"},
@@ -36,3 +36,24 @@ class GetBusinessProfile(APIView):
 
         serializer = BusinessRegisterSerializer(business)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, pk):
+        try:
+            business = BusinessUser.objects.get(pk=pk, user=request.user)
+        except BusinessUser.DoesNotExist:
+            return Response({"detail": "Business profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BusinessRegisterSerializer(business , data=request.data , partial = True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                    "message": "Business profile updated successfully",
+                    "data": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

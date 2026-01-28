@@ -11,7 +11,7 @@ class BusinessRegisterSerializer(serializers.ModelSerializer):
             "tenant_domain",
             "gst_number",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id" , "user"]
 
     def validate_tenant_domain(self, value):
         return value.lower()

@@ -18,7 +18,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password")
-        user = User(**validated_data)
+        user = User.objects.create_user(**validated_data)
         user.set_password(password)
         user.save()
 
@@ -36,10 +36,8 @@ class UserLoginSerializer(serializers.Serializer):
         password = data.get("password")
 
         try:
-            user = User.objects.get(phone_no = phone_no)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid credentials")
-        if not user.check_password(password):
+            user = authenticate(phone_no = phone_no , password = password)
+        except:
             raise serializers.ValidationError("Invalid credentials")
         
         self.user = user
