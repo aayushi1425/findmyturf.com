@@ -1,57 +1,38 @@
-from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.response import Response
+from rest_framework import status, permissions
 
-from .serializers import BusinessRegisterSerializer, BusinessLoginSerializer
-
+from .models import BusinessUser
+from .serializers import BusinessRegisterSerializer
 
 class BusinessRegister(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = BusinessRegisterSerializer(data=request.data)
+        data = request.data.copy()
+        data["user"] = request.user.id
+
+        serializer = BusinessRegisterSerializer(data=data)
         if serializer.is_valid():
-            business_client = serializer.save()
-            access_token = str(AccessToken.for_user(business_client))
-            
-            response_data = {
-                "message": "Business registered successfully",
-                "token": access_token ,
-                "business": {
-                    "id": str(business_client.business_id),
-                    "email": business_client.business_email,
-                    "name": business_client.business_name,
-                    "phone": business_client.business_phone,
-                    "gst_number": business_client.gst_number,
-                    "created_at": business_client.created_at,
-                }
-            }
-            return Response(response_data, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(
+                {"message": "Business registered successfully", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class GetBusinessProfile(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-class BusinessLogin(APIView):
-    permission_classes = [AllowAny]
+    def get(self, request):
+        try:
+            business = BusinessUser.objects.get(user=request.user)
+        except BusinessUser.DoesNotExist:
+            return Response(
+                {"detail": "Business profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    def post(self, request):
-        serializer = BusinessLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            business_client = serializer.validated_data["business_client"]
-            access_token = str(AccessToken.for_user(business_client))
-            
-            response_data = {
-                "message": "Login successful",
-                "token": access_token ,
-                "business": {
-                    "id": str(business_client.business_id),
-                    "email": business_client.business_email,
-                    "name": business_client.business_name,
-                    "phone": business_client.business_phone,
-                    "gst_number": business_client.gst_number,
-                    "created_at": business_client.created_at,
-                }
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = BusinessRegisterSerializer(business)
+        return Response(serializer.data, status=status.HTTP_200_OK)

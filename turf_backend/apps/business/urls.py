@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import BusinessLogin, BusinessRegister
+from .views import  BusinessRegister , GetBusinessProfile
 
 urlpatterns = [
-    path("login/", BusinessLogin.as_view(), name="business-login"),
+    path("profile/", GetBusinessProfile.as_view(), name="business-profile"),
     path("register/", BusinessRegister.as_view(), name="business-register"),
 ]
