@@ -1,17 +1,14 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 from dotenv import load_dotenv
 from urllib.parse import urlparse, parse_qsl
 
 load_dotenv()
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
-
-
-load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-kit49^ppt%%+7_kbjds^tai6@k7ffh7nlo6kac48jpc5_le-vh'
 DEBUG = True
-
+SECRET_KEY = os.getenv('SECRET_KEY')
 ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -20,9 +17,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.users.apps.UsersConfig',
-    'business.apps.BusinessConfig',
+    'apps.users',
+    'apps.business',
     'django.contrib.postgres',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -78,13 +77,30 @@ AUTH_PASSWORD_VALIDATORS = [{
     },
 ]
 
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
-
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "users.User"
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "id",
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "5/min"
+    }
+}
