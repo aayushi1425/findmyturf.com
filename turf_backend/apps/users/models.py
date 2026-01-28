@@ -3,11 +3,15 @@ import uuid
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 class UserManager(BaseUserManager):
-    def create_user(self, phone_no, password=None, **extra_fields):
-        if not phone_no:
-            raise ValueError("Phone number is required")
+    def create_user(self, email=None, phone_no=None, password=None, **extra_fields):
+        if not email and not phone_no:
+            raise ValueError("Email or phone number is required")
+
+        if email:
+            email = self.normalize_email(email)
 
         user = self.model(
+            email=email,
             phone_no=phone_no,
             **extra_fields
         )
@@ -15,37 +19,32 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone_no, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("Admin must have email")
+
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
 
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True")
-
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True")
-
-        return self.create_user(phone_no, password, **extra_fields)
+        return self.create_user(
+            email=email,
+            password=password,
+            **extra_fields
+        )
 
 class User(AbstractBaseUser, PermissionsMixin):
-    user_id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     name = models.CharField(max_length=255)
 
-    email = models.EmailField(
-        unique=True,
-        null=True,
-        blank=True
-    )
+    email = models.EmailField(unique=True, null=True, blank=True)
 
     phone_no = models.CharField(
         max_length=15,
-        unique=True
+        unique=True,
+        null=True,
+        blank=True
     )
 
     is_active = models.BooleanField(default=True)
@@ -71,7 +70,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = "phone_no"
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["name"]
 
     class Meta:
@@ -81,4 +80,4 @@ class User(AbstractBaseUser, PermissionsMixin):
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.phone_no})"
+        return f"{self.name} ({self.email or self.phone_no})"
