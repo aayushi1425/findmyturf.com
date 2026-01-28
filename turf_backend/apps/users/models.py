@@ -82,3 +82,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.name} ({self.email or self.phone_no})"
+
+    @property
+    def id(self):
+        return self.user_id

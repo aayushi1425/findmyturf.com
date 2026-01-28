@@ -13,14 +13,15 @@ class UserRegisterAPIView(APIView):
     def post(self, request):
         serializer = UserRegisterSerializer(data=request.data)
         serializer = cast(UserRegisterSerializer, serializer)
-
+        
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
+        access_token = str(AccessToken.for_user(user))
 
-        return Response(
-            {
+        return Response({
                 "message": "User registered successfully",
+                "token": access_token ,
                 "user_id": user.user_id
             },
             status=status.HTTP_201_CREATED

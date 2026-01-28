@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 
 from .serializers import BusinessRegisterSerializer, BusinessLoginSerializer
 
@@ -14,14 +14,11 @@ class BusinessRegister(APIView):
         serializer = BusinessRegisterSerializer(data=request.data)
         if serializer.is_valid():
             business_client = serializer.save()
-            refresh = RefreshToken.for_user(business_client)
+            access_token = str(AccessToken.for_user(business_client))
             
             response_data = {
                 "message": "Business registered successfully",
-                "tokens": {
-                    "access": str(refresh.access_token),
-                    "refresh": str(refresh),
-                },
+                "token": access_token ,
                 "business": {
                     "id": str(business_client.business_id),
                     "email": business_client.business_email,
@@ -42,14 +39,11 @@ class BusinessLogin(APIView):
         serializer = BusinessLoginSerializer(data=request.data)
         if serializer.is_valid():
             business_client = serializer.validated_data["business_client"]
-            refresh = RefreshToken.for_user(business_client)
+            access_token = str(AccessToken.for_user(business_client))
             
             response_data = {
                 "message": "Login successful",
-                "tokens": {
-                    "access": str(refresh.access_token),
-                    "refresh": str(refresh),
-                },
+                "token": access_token ,
                 "business": {
                     "id": str(business_client.business_id),
                     "email": business_client.business_email,

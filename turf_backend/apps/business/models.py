@@ -65,3 +65,7 @@ class BusinessUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.business_name} ({self.business_email})"
+
+    @property
+    def id(self):
+        return self.business_id
