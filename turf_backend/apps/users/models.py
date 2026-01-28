@@ -3,8 +3,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser , BaseUserManager
 
 class UserManager(BaseUserManager):
-    def create_user(self , email , phone_no , password = None, **extra_fields):
-        if not email and not phone_no:
+    def create_user(self  , phone_no , email = None ,  password = None, **extra_fields):
+        if not phone_no:
             raise ValueError("Email or phone number is required")
 
         if email:

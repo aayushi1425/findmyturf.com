@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny , IsAuthenticated
 from rest_framework_simplejwt.tokens import AccessToken
 from apps.business.models import BusinessUser
 from apps.business.serializers import BusinessRegisterSerializer
-from .serializers import UserRegisterSerializer, UserLoginSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer , UserSerializer
 
 class UserRegisterAPIView(APIView):
     permission_classes = [AllowAny]
@@ -40,6 +40,24 @@ class UserLoginAPIView(APIView):
             "token": access_token
         }, status=status.HTTP_200_OK)
 
+class UpdateUserProfile(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request):
+        user = request.user
+        serializer = UserRegisterSerializer(user, data = request.data, partial = True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "User profile updated successfully", "data": serializer.data},
+                status = status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class ListUserBusiness(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -48,3 +66,4 @@ class ListUserBusiness(APIView):
         business = BusinessUser.objects.filter(user = user)
         serializer = BusinessRegisterSerializer(business, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    

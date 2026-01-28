@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.users',
     'apps.business',
+    'apps.turfs',
     'django.contrib.postgres',
     'rest_framework',
     'rest_framework_simplejwt',
