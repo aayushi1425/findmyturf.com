@@ -40,9 +40,12 @@ class UserLoginSerializer(serializers.Serializer):
         password = data.get("password")
 
         try:
-            user = authenticate(phone_no = phone_no , password = password)
+            user = authenticate(phone_no = phone_no, password = password)
         except:
             raise serializers.ValidationError("Invalid credentials")
         
+        if not user:
+            raise serializers.ValidationError("Invalid credentials")
+    
         self.user = user
-        return user
+        return data

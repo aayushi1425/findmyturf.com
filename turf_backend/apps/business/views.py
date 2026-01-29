@@ -11,7 +11,7 @@ class BusinessRegister(APIView):
     def post(self, request):
         data = request.data.copy()
         data["user"] = request.user.id
-
+        
         serializer = BusinessRegisterSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
