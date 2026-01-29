@@ -14,6 +14,7 @@ class Turfs(models.Model):
     sport_type = models.CharField(max_length = 20, choices = [(sport.value, sport.value) for sport in SportType])
     location = models.CharField(max_length = 255)
     city = models.CharField(max_length = 255)
+    price = models.DecimalField(max_digits = 10, decimal_places = 2)
     state = models.CharField(max_length = 255)
     pincode = models.CharField(max_length = 6)
     latitude = models.DecimalField(max_digits = 9, decimal_places = 6)

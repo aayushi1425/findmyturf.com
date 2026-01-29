@@ -11,23 +11,23 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ('slots', '0001_initial'),
+        ('turfs', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BusinessUser',
+            name='Booking',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('business_name', models.CharField(max_length=255)),
-                ('tenant_domain', models.TextField(unique=True)),
-                ('gst_number', models.CharField(blank=True, max_length=15, null=True, unique=True)),
+                ('booking_status', models.CharField(choices=[('PENDING', 'PENDING'), ('CONFIRMED', 'CONFIRMED'), ('CANCELLED', 'CANCELLED')], max_length=20)),
+                ('totol_amount', models.DecimalField(decimal_places=2, max_digits=10)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
+                ('slot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='slots.slot')),
+                ('turf', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='turfs.turfs')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
-            options={
-                'db_table': 'business',
-            },
         ),
     ]
