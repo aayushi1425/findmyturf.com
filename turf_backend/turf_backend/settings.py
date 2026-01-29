@@ -9,7 +9,7 @@ tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = True
 SECRET_KEY = os.getenv('SECRET_KEY')
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.users',
     'apps.business',
+    'apps.turf',
     'django.contrib.postgres',
     'rest_framework',
     'rest_framework_simplejwt',
