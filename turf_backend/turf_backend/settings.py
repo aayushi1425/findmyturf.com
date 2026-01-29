@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.business',
     'apps.turfs',
+    'apps.slots',
     'django.contrib.postgres',
     'rest_framework',
     'rest_framework_simplejwt',
