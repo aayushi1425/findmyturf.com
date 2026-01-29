@@ -4,12 +4,15 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from urllib.parse import urlparse, parse_qsl
 
+import cloudinary
+import cloudinary.uploader
+
 load_dotenv()
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = True
 SECRET_KEY = os.getenv('SECRET_KEY')
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -107,3 +110,10 @@ REST_FRAMEWORK = {
         "anon": "5/min"
     }
 }
+
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+)

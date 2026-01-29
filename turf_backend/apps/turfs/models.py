@@ -29,3 +29,23 @@ class Turfs(models.Model):
 
     def __str__(self):
         return self.name
+    
+class TurfImage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+    turf = models.ForeignKey(
+        "turfs.Turfs",
+        on_delete=models.CASCADE,
+        related_name="images"
+    )
+
+    image_url = models.TextField()
+    priority = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "turf_images"
+        ordering = ["priority", "created_at"]
+
+    def __str__(self):
+        return f"Image for {self.turf.name}"
