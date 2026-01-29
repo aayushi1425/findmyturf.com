@@ -1,12 +1,12 @@
 from django.urls import path
 from .views import (
-    TurfListCreateView,
-    TurfDetailView,
-    TurfStatusUpdateView,
+    TurfListCreateAPIView,
+    TurfDetailAPIView,
+    TurfStatusAPIView
 )
 
 urlpatterns = [
-    path("turfs/", TurfListCreateView.as_view()),
-    path("turfs/<uuid:turf_id>/", TurfDetailView.as_view()),
-    path("turfs/<uuid:turf_id>/status/", TurfStatusUpdateView.as_view()),
+    path("turfs/", TurfListCreateAPIView.as_view()),
+    path("turfs/<uuid:turf_id>/", TurfDetailAPIView.as_view()),
+    path("turfs/<uuid:turf_id>/status/", TurfStatusAPIView.as_view()),
 ]

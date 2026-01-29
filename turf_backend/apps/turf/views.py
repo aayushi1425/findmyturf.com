@@ -1,17 +1,15 @@
-from django.shortcuts import render
-
-# Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import status, permissions
+from django.shortcuts import get_object_or_404
 
 from .models import Turf
 from .serializers import TurfSerializer
+from apps.business.models import BusinessUser
 
 
-class TurfListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+class TurfListCreateAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         turfs = Turf.objects.filter(is_open=True)
@@ -19,68 +17,54 @@ class TurfListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        try:
+            business = BusinessUser.objects.get(user=request.user)
+        except BusinessUser.DoesNotExist:
+            return Response(
+                {"detail": "Business profile not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = TurfSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=request.user)
+            serializer.save(owner = business)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TurfDetailView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self, turf_id):
-        try:
-            return Turf.objects.get(turf_id=turf_id)
-        except Turf.DoesNotExist:
-            return None
+class TurfDetailAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, turf_id):
-        turf = self.get_object(turf_id)
-        if not turf:
-            return Response({"error": "Turf not found"}, status=404)
-
+        turf = get_object_or_404(Turf, id=turf_id)
         serializer = TurfSerializer(turf)
         return Response(serializer.data)
 
     def patch(self, request, turf_id):
-        turf = self.get_object(turf_id)
-        if not turf:
-            return Response({"error": "Turf not found"}, status=404)
+        turf = get_object_or_404(Turf, id=turf_id)
 
-        if turf.owner != request.user:
-            return Response({"error": "Unauthorized"}, status=403)
+        if turf.owner.user != request.user:
+            return Response(
+                {"detail": "Not allowed"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-        serializer = TurfSerializer(turf, data=request.data, partial=True)
+        serializer = TurfSerializer(
+            turf,
+            data=request.data,
+            partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
 
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TurfStatusUpdateView(APIView):
-    permission_classes = [IsAuthenticated]
+class TurfStatusAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    def patch(self, request, turf_id):
-        try:
-            turf = Turf.objects.get(turf_id=turf_id)
-        except Turf.DoesNotExist:
-            return Response({"error": "Turf not found"}, status=404)
-
-        if turf.owner != request.user:
-            return Response({"error": "Unauthorized"}, status=403)
-
-        is_open = request.data.get("is_open")
-        if is_open is None:
-            return Response(
-                {"error": "is_open field required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        turf.is_open = is_open
-        turf.save()
-
-        return Response(
-            {"message": "Turf status updated", "is_open": turf.is_open}
-        )
+    def get(self, request, turf_id):
+        turf = get_object_or_404(Turf, id=turf_id)
+        return Response({"is_open": turf.is_open})

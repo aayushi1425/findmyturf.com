@@ -1,23 +1,16 @@
 import uuid
 from django.db import models
-from apps.business.models import BusinessUser
-
 
 class Turf(models.Model):
 
     class SportsType(models.TextChoices):
-        CRICKET = "CRICKET", "Cricket"
-        FOOTBALL = "FOOTBALL", "Football"
+        CRICKET = "CRICKET"
+        FOOTBALL = "FOOTBALL"
 
-    turf_id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-        unique=True
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     owner = models.ForeignKey(
-        BusinessUser,
+        "business.BusinessUser",
         on_delete=models.CASCADE,
         related_name="turfs"
     )
@@ -38,7 +31,7 @@ class Turf(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
 
-    dimension = models.CharField(max_length=100)  # L x B x H
+    dimension = models.CharField(max_length=50)  # L x B x H
 
     is_open = models.BooleanField(default=True)
 
@@ -47,31 +40,7 @@ class Turf(models.Model):
 
     class Meta:
         db_table = "turfs"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.name
-
-
-class TurfImage(models.Model):
-    image_id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
-
-    turf = models.ForeignKey(
-        Turf,
-        on_delete=models.CASCADE,
-        related_name="images"
-    )
-
-    image = models.ImageField(upload_to="turf_images/")
-    is_primary = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "turf_images"
-
-    def __str__(self):
-        return f"Image for {self.turf.name}"
