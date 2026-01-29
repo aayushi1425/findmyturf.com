@@ -2,9 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path("api/turf/" , include("apps.turfs.urls")),
+    path("admin/", admin.site.urls),
+    path("api/turf/", include("apps.turfs.urls")),
     path("api/user/", include("apps.users.urls")),
     path("api/business/", include("apps.business.urls")),
     path("api/booking/", include("apps.booking.urls")),
-    # path("api/slots/", include("apps.slots.urls")),
+    path("api/slots/", include("apps.slots.urls")),
 ]

@@ -19,10 +19,9 @@ def calculate_amount(start_time, end_time, price_per_hour):
 
 
 def is_slot_overlapping(turf, slot_date, start_time, end_time):
-    return Slot.objects.filter(
-        turf=turf,
-        slot_date=slot_date,
-        start_time__lt=end_time,
-        end_time__gt=start_time,
-        is_available=False
+    return Slot.objects.filter(turf = turf,
+        slot_date = slot_date,
+        start_time__lt = end_time,
+        end_time__gt = start_time,
+        is_available = False
     ).exists()

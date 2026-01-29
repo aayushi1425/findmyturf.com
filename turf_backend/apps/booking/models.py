@@ -5,7 +5,6 @@ class BookingStatus(models.TextChoices):
     CONFIRMED = "CONFIRMED", "Confirmed"
     CANCELLED = "CANCELLED", "Cancelled"
 
-
 class Booking(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey("users.User" , on_delete=models.CASCADE)

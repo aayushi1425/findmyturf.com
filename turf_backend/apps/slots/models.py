@@ -1,15 +1,12 @@
-# apps/slots/models.py
-
 import uuid
 from django.db import models
 
 class Slot(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    turf = models.ForeignKey(
-        "turfs.Turfs",
-        on_delete=models.CASCADE,
-        related_name="slots"
+    turf = models.ForeignKey("turfs.Turfs",
+        on_delete = models.CASCADE,
+        related_name = "slots"
     )
 
     slot_date = models.DateField()
