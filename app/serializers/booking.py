@@ -17,7 +17,11 @@ class BookingSerializer(serializers.ModelSerializer):
                 "End time must be after start time."
             )
 
-        # Overlap check
+        if start < datetime.now().time() or end < datetime.now().time():
+            raise serializers.ValidationError(
+                "Start & End time must be in the future."
+            )
+        
         conflict = Booking.objects.filter(
             turf=data['turf'],
             booking_date=data['booking_date'],
