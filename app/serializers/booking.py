@@ -1,26 +1,42 @@
 from rest_framework import serializers
-from datetime import datetime, timedelta
-from app.models.booking import Booking
+from datetime import datetime
+
+from app.models.booking import (
+    Booking,
+    BookingStatus,
+    PaymentStatus
+)
+
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = '__all__'
-        read_only_fields = ['id', 'custumer', 'amount', 'created_at']
+        fields = "__all__"
+        read_only_fields = [
+            "id",
+            "custumer",
+            "amount",
+            "created_at",
+            "payment_status",
+            "provider_payment_id",
+            "payment_provider",
+            "status",
+        ]
 
     def validate(self, data):
-        start = data['start_time']
-        end = data['end_time']
+        start = data["start_time"]
+        end = data["end_time"]
 
         if start >= end:
             raise serializers.ValidationError(
                 "End time must be after start time."
             )
 
-        # Overlap check
         conflict = Booking.objects.filter(
-            turf=data['turf'],
-            booking_date=data['booking_date'],
+            turf=data["turf"],
+            booking_date=data["booking_date"],
+            status=BookingStatus.CONFIRMED,
+            payment_status=PaymentStatus.SUCCESS,
             start_time__lt=end,
             end_time__gt=start
         ).exists()
@@ -33,15 +49,19 @@ class BookingSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        turf = validated_data['turf']
-        start = validated_data['start_time']
-        end = validated_data['end_time']
+        turf = validated_data["turf"]
+        start = validated_data["start_time"]
+        end = validated_data["end_time"]
 
         start_dt = datetime.combine(datetime.today(), start)
         end_dt = datetime.combine(datetime.today(), end)
-        duration_hours = (end_dt - start_dt).total_seconds() / 3600
-        amount = int(duration_hours * turf.price)
 
-        validated_data['amount'] = amount
+        duration_hours = (
+            end_dt - start_dt
+        ).total_seconds() / 3600
+
+        validated_data["amount"] = int(
+            duration_hours * turf.price
+        )
 
         return super().create(validated_data)

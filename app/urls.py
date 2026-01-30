@@ -3,8 +3,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from app.views.auth import UserRegisterView, OwnerRegisterView
 from app.views.turf import TurfCreateView, TurfUpdateView, TurfListView
-from app.views.booking import BookingCreateView, MyBookingsView, BookingCancelView
+from app.views.booking import BookingCreateView, MyBookingsView, CancelBookingView
 from app.views.availability import TurfAvailableSlotsView
+from app.views.payment import ConfirmPaymentView
 
 urlpatterns = [
     path('auth/login/', TokenObtainPairView.as_view()),
@@ -20,8 +21,11 @@ urlpatterns = [
     # Booking
     path('booking/create/', BookingCreateView.as_view()),
     path('booking/my/', MyBookingsView.as_view()),
-    path('booking/<uuid:pk>/cancel/', BookingCancelView.as_view()),
+    path('booking/<uuid:pk>/cancel/', CancelBookingView.as_view()),
 
     # slot avaible
     path('turf/<uuid:turf_id>/available-slots/', TurfAvailableSlotsView.as_view()),
+    
+    # Payment
+    path('payment/confirm/<uuid:booking_id>/', ConfirmPaymentView.as_view()),
 ]
