@@ -6,6 +6,7 @@ from app.views.turf import TurfCreateView, TurfUpdateView, TurfListView
 from app.views.booking import BookingCreateView, MyBookingsView, CancelBookingView
 from app.views.availability import TurfAvailableSlotsView
 from app.views.payment import ConfirmPaymentView
+from app.views.turf_image import TurfImageUploadView, SetDefaultTurfImageView, DeleteTurfImageView
 
 urlpatterns = [
     path('auth/login/', TokenObtainPairView.as_view()),
@@ -28,4 +29,8 @@ urlpatterns = [
     
     # Payment
     path('payment/confirm/<uuid:booking_id>/', ConfirmPaymentView.as_view()),
+
+    path("turf/<uuid:turf_id>/image/upload/", TurfImageUploadView.as_view()),
+    path("turf/image/<uuid:image_id>/set-default/", SetDefaultTurfImageView.as_view()),
+    path("turf/image/<uuid:image_id>/delete/", DeleteTurfImageView.as_view()),
 ]
