@@ -1,12 +1,15 @@
-from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from app.serializers.booking import BookingSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from app.models.booking import Booking, BookingStatus, PaymentStatus
 from app.models.booking import Booking
-from app.permission import IsUser
+from app.utils.notify import notifyMessage
 
 class BookingCreateView(CreateAPIView):
     serializer_class = BookingSerializer
-    permission_classes = [IsAuthenticated, IsUser]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(custumer=self.request.user)
@@ -19,10 +22,32 @@ class MyBookingsView(ListAPIView):
         return Booking.objects.filter(custumer=self.request.user)
 
 
-class BookingCancelView(UpdateAPIView):
-    queryset = Booking.objects.all()
-    serializer_class = BookingSerializer
-    http_method_names = ['patch']
+class CancelBookingView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def perform_update(self, serializer):
-        serializer.save(amount=0)
+    def post(self, request, booking_id):
+        booking = Booking.objects.get(
+            id=booking_id
+        )
+
+        if booking.status != BookingStatus.CONFIRMED:
+            return Response({"error": "Only confirmed bookings can be cancelled"},
+                status=400
+            )
+        
+        if str(request.user.id) not in [str(booking.turf.business.user.id) , str(booking.custumer.id)]:
+            return Response({"error": "You can only cancel your own bookings"},
+                status=400
+            )
+
+        booking.status = BookingStatus.CANCELLED
+        booking.payment_status = PaymentStatus.REFUNDED
+        booking.save()
+
+        notifyMessage(
+            f"Your booking with id {booking_id} has been cancelled", 
+            booking.custumer.phone_no
+        )
+        return Response({
+            "msg": "Booking cancelled and refund processed"
+        })
