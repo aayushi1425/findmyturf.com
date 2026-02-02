@@ -1,7 +1,14 @@
+import { Routes, Route } from "react-router-dom";
+import AuthPage from "./pages/AuthPage";
+import Dashboard from "./pages/Dashboard";
+
 export default function App() {
-    return (
-        <div>
-            <h1>hello</h1>
-        </div>
-    );
+  return (
+    <Routes>
+      <Route path="/" element={<AuthPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="*" element={<AuthPage />} />
+
+    </Routes>
+  );
 }
