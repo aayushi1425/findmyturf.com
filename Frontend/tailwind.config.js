@@ -1,14 +1,17 @@
 export default {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  content: [
+    "./index.html",
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
-        primary: "#25343F",
         light: "#EAEFEF",
         muted: "#BFC9D1",
+        dark: "#25343F",
         accent: "#FF9B51",
       },
     },
   },
   plugins: [],
-};
+}
