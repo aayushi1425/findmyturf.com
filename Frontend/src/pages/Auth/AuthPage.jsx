@@ -17,8 +17,8 @@ export default function AuthPage() {
           FindMyTurf
         </h1>
 
-        {/* USER | BUSINESS toggle — always visible */}
-        <RoleToggle role={role} setRole={setRole} />
+        {/* USER | BUSINESS toggle — only visible on signup */}
+        {mode === "signup" && <RoleToggle role={role} setRole={setRole} />}
 
         {/* FORM */}
         {mode === "login"

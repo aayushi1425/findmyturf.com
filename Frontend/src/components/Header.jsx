@@ -12,18 +12,13 @@ export default function Header() {
         </h1>
 
         <div className="flex gap-3">
-          <button
-            onClick={() => navigate("/login")}
-            className="px-4 py-2 text-sm font-medium border border-slate-300 rounded-lg hover:bg-slate-100"
-          >
-            Login
-          </button>
+          
 
           <button
-            onClick={() => navigate("/register")}
+            onClick={() => navigate("/login")}
             className="px-4 py-2 text-sm font-medium bg-slate-900 text-white rounded-lg hover:bg-slate-800"
           >
-            Register
+            Login
           </button>
         </div>
       </div>
