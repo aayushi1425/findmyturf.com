@@ -14,7 +14,7 @@ export default function Turfs() {
         city: "",
         min_price: "",
         max_price: "",
-        radius: 100,
+        radius: 10,
     });
 
     const [page, setPage] = useState(1);
@@ -27,7 +27,7 @@ export default function Turfs() {
 
     useEffect(() => {
         fetchTurfs();
-    }, [page, filters, location.lat]);
+    }, [page, filters]);
 
     async function fetchTurfs() {
         setLoading(true);
@@ -53,6 +53,7 @@ export default function Turfs() {
             setLoading(false);
         }
     }
+
 
     return (
         <div className="min-h-screen bg-slate-50 px-6 py-10">

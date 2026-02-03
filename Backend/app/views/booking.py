@@ -1,58 +1,82 @@
-from rest_framework.generics import CreateAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from app.serializers.booking import BookingSerializer
+from datetime import datetime
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from app.models.booking import BookingStatus, PaymentStatus
-from app.models.booking import Booking
-from app.utils.notify import notifyMessage
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from app.serializers.booking import BookingDetailSerializer
+from app.models.court import Court
+from app.utils.notify import notifyMessage
+from app.models.booking import Booking, BookingStatus, PaymentStatus
+from app.serializers.booking import BookingCreateSerializer , BookingSerializer, BookingDetailSerializer
 
-class BookingCreateView(CreateAPIView):
-    serializer_class = BookingSerializer
+
+class BookingCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(custumer=self.request.user)
+    def post(self, request):
+        serializer = BookingCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        user = request.user
+
+        court = Court.objects.get(id=data["court"])
+
+        start = data["start_time"]
+        end = data["end_time"]
+        booking_date = data["booking_date"]
+
+        if start >= end:
+            return Response(
+                {"error": "End time must be after start time"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        conflict = Booking.objects.filter(
+            court=court,
+            booking_date=booking_date,
+            start_time__lt=end,
+            end_time__gt=start,
+            status__in=[BookingStatus.PENDING, BookingStatus.CONFIRMED],
+        ).exists()
+
+        if conflict:
+            return Response(
+                {"error": "This slot is already booked"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        start_dt = datetime.combine(booking_date, start)
+        end_dt = datetime.combine(booking_date, end)
+        hours = (end_dt - start_dt).total_seconds() / 3600
+        amount = int(hours * court.price)
+
+        booking = Booking.objects.create(
+            user=user,
+            court=court,
+            booking_date=booking_date,
+            start_time=start,
+            end_time=end,
+            amount=amount,
+            status=BookingStatus.PENDING,
+            payment_status=PaymentStatus.INITIATED,
+        )
+
+        return Response(
+            BookingSerializer(booking).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
-class MyBookingsView(ListAPIView):
-    serializer_class = BookingSerializer
-
-    def get_queryset(self):
-        return Booking.objects.filter(custumer=self.request.user)
-
-
-class CancelBookingView(APIView):
+class MyBookingsView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, booking_id):
-        booking = Booking.objects.get(
-            id=booking_id
-        )
+    def get(self, request):
+        bookings = Booking.objects.filter(user=request.user).order_by("-created_at")
 
-        if booking.status != BookingStatus.CONFIRMED:
-            return Response({"error": "Only confirmed bookings can be cancelled"},
-                status=400
-            )
-        
-        if str(request.user.id) not in [str(booking.turf.business.user.id) , str(booking.custumer.id)]:
-            return Response({"error": "You can only cancel your own bookings"},
-                status=400
-            )
+        serializer = BookingSerializer(bookings, many=True)
+        return Response(serializer.data)
 
-        booking.status = BookingStatus.CANCELLED
-        booking.payment_status = PaymentStatus.REFUNDED
-        booking.save()
-
-        notifyMessage(
-            f"Your booking with id {booking_id} has been cancelled", 
-            booking.custumer.phone_no
-        )
-        return Response({
-            "msg": "Booking cancelled and refund processed"
-        })
 
 class BookingDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -60,19 +84,58 @@ class BookingDetailView(APIView):
     def get(self, request, booking_id):
         try:
             booking = Booking.objects.get(
-                id = booking_id,
-                custumer = request.user
+                id=booking_id,
+                user=request.user,
             )
         except Booking.DoesNotExist:
-            return Response({"error": "Booking not found"},
-                status = status.HTTP_404_NOT_FOUND
+            return Response(
+                {"error": "Booking not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = BookingDetailSerializer(booking)
         return Response(serializer.data)
 
-class GetBookingById(ListAPIView):
-    serializer_class = BookingSerializer
 
-    def get_queryset(self):
-        return Booking.objects.filter(id=self.kwargs["booking_id"])
+class CancelBookingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, booking_id):
+        try:
+            booking = Booking.objects.select_related("court__turf__business__user").get(
+                id=booking_id
+            )
+        except Booking.DoesNotExist:
+            return Response({"error": "Booking not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        user = request.user
+        is_owner = booking.court.turf.business.user == user
+        is_customer = booking.user == user
+
+        if not (is_owner or is_customer):
+            return Response(
+                {"error": "You are not allowed to cancel this booking"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if booking.status in [BookingStatus.CANCELLED, BookingStatus.REFUNDED]:
+            return Response(
+                {"error": "Booking already cancelled"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        booking.status = BookingStatus.CANCELLED
+        if booking.payment_status == PaymentStatus.SUCCESS:
+            booking.payment_status = PaymentStatus.REFUNDED
+
+        booking.save()
+
+        notifyMessage(f"Your booking ({booking.id}) has been cancelled",
+            booking.user.phone_no,
+        )
+
+        return Response({"message": "Booking cancelled successfully"},
+            status=status.HTTP_200_OK,
+        )

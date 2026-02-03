@@ -1,135 +1,221 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../config/api";
-import TurfCard from "../components/TurfCard";
-import TurfFilters from "../components/TurfFilters";
-import useGeoLocation from "../hooks/useGeoLocation";
 
-export default function Turfs() {
-    const location = useGeoLocation();
+export default function BookingDetail() {
+    const { id } = useParams();
+    const navigate = useNavigate();
 
-    const [turfs, setTurfs] = useState([]);
+    const [booking, setBooking] = useState(null);
+    const [turf, setTurf] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
 
-    const [filters, setFilters] = useState({
-        city: "",
-        min_price: "",
-        max_price: "",
-        radius: 100,
-    });
-
-    const [page, setPage] = useState(1);
-    const [count, setCount] = useState(0);
-    const [hasNext, setHasNext] = useState(false);
-    const [hasPrev, setHasPrev] = useState(false);
-
-    const PAGE_SIZE = 9; // must match backend PAGE_SIZE
-
-    // Reset page when filters or location change
     useEffect(() => {
-        setPage(1);
-    }, [filters, location.lat]);
+        fetchBooking();
+    }, []);
 
-    // Fetch data whenever page / filters / location change
-    useEffect(() => {
-        fetchTurfs();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, filters, location.lat]);
-
-    async function fetchTurfs() {
-        setLoading(true);
+    async function fetchBooking() {
         try {
-            const res = await api.get("/turf/list/", {
-                params: {
-                    page,
-                    city: filters.city || undefined,
-                    min_price: filters.min_price || undefined,
-                    max_price: filters.max_price || undefined,
-                    radius: filters.radius,
-                    lat: location.lat || undefined,
-                    lon: location.lon || undefined,
-                    sort: "distance",
-                },
-            });
+            const res = await api.get(`/booking/${id}/`);
+            setBooking(res.data[0]);
 
-            setTurfs(res.data.results || []);
-            setCount(res.data.count || 0);
-            setHasNext(Boolean(res.data.next));
-            setHasPrev(Boolean(res.data.previous));
+            const turfRes = await api.get(`/turf/${res.data[0].turf}/`);
+            setTurf(turfRes.data);
         } catch (err) {
-            console.error("Fetch error:", err);
+            console.error(err);
         } finally {
             setLoading(false);
         }
     }
 
-    const totalPages = Math.ceil(count / PAGE_SIZE);
+    function openGoogleMaps() {
+        if (!turf) return;
+
+        const query = `${turf.location}, ${turf.city}, ${turf.state}`;
+        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            query
+        )}`;
+        window.open(url, "_blank");
+    }
+
+    async function cancelBooking() {
+        const confirmCancel = window.confirm(
+            "Are you sure you want to cancel this booking?"
+        );
+
+        if (!confirmCancel) return;
+
+        setActionLoading(true);
+
+        try {
+            await api.post(`/booking/${booking.id}/cancel/`);
+            alert("Booking cancelled successfully");
+            fetchBooking();
+        } catch (err) {
+            // console.error(err.response.data.error);
+            console.log("f");
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center text-slate-500">
+                Loading booking details...
+            </div>
+        );
+    }
+
+    if (!booking || !turf) {
+        return (
+            <div className="flex min-h-screen items-center justify-center text-red-500">
+                Booking not found
+            </div>
+        );
+    }
+
+    const statusColor = {
+        PENDING: "bg-yellow-100 text-yellow-700",
+        CONFIRMED: "bg-green-100 text-green-700",
+        CANCELLED: "bg-red-100 text-red-700",
+        REFUNDED: "bg-blue-100 text-blue-700",
+    };
+
+    const paymentColor = {
+        INITIATED: "bg-yellow-100 text-yellow-700",
+        SUCCESS: "bg-green-100 text-green-700",
+        FAILED: "bg-red-100 text-red-700",
+        REFUNDED: "bg-blue-100 text-blue-700",
+    };
 
     return (
-        <div className="min-h-screen bg-slate-50 px-6 py-10">
-            {/* HEADER */}
-            <div className="mx-auto mb-8 max-w-6xl">
-                <h1 className="text-3xl font-bold text-slate-900">
-                    Find Turfs Near You ⚽
-                </h1>
-                <p className="mt-1 text-sm text-slate-600">
-                    Book football turfs, sports arenas, and play your game.
-                </p>
-            </div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-6 py-12">
+            <div className="mx-auto max-w-4xl space-y-8">
 
-            {/* FILTERS */}
-            <div className="mx-auto mb-8 max-w-6xl rounded-2xl bg-white p-5 shadow-sm">
-                <TurfFilters filters={filters} setFilters={setFilters} />
-            </div>
+                {/* HEADER */}
+                <div className="rounded-3xl bg-white p-6 shadow-lg">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <h1 className="text-2xl font-bold text-slate-900">
+                            Booking Details
+                        </h1>
 
-            {/* LIST */}
-            <div className="mx-auto max-w-6xl">
-                {loading ? (
-                    <div className="flex items-center justify-center py-24 text-slate-500">
-                        Loading turfs near you...
+                        <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600">
+                            #{booking.id.slice(0, 8)}…
+                        </span>
                     </div>
-                ) : turfs.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-slate-500">
-                        <h3 className="mb-2 text-lg font-semibold">
-                            No turfs found 😕
-                        </h3>
-                        <p className="text-sm">
-                            Try changing filters or location.
-                        </p>
-                    </div>
-                ) : (
-                    <>
-                        {/* GRID */}
-                        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
-                            {turfs.map((turf) => (
-                                <TurfCard key={turf.id} turf={turf} />
-                            ))}
+                </div>
+
+                {/* TURF INFO */}
+                <div className="rounded-3xl bg-white p-6 shadow-lg">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                {turf.name}
+                            </h2>
+
+                            <p className="mt-1 text-sm text-slate-600">
+                                {turf.location}, {turf.city}, {turf.state}
+                            </p>
+
+                            <p className="mt-1 text-xs text-slate-500">
+                                Size: {turf.length} × {turf.breadth} × {turf.height} m
+                            </p>
                         </div>
 
-                        {/* PAGINATION */}
-                        {count > PAGE_SIZE && (
-                            <div className="mt-10 flex items-center justify-center gap-4">
-                                <button
-                                    disabled={!hasPrev}
-                                    onClick={() => setPage((p) => p - 1)}
-                                    className="rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-40"
-                                >
-                                    ← Previous
-                                </button>
+                        <button
+                            onClick={openGoogleMaps}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-900 hover:bg-slate-50"
+                        >
+                            📍 Open Maps
+                        </button>
+                    </div>
+                </div>
 
-                                <span className="text-sm text-slate-600">
-                                    Page {page} of {totalPages}
-                                </span>
+                {/* SUMMARY GRID */}
+                <div className="grid gap-6 md:grid-cols-2">
 
-                                <button
-                                    disabled={!hasNext}
-                                    onClick={() => setPage((p) => p + 1)}
-                                    className="rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-40"
-                                >
-                                    Next →
-                                </button>
-                            </div>
+                    {/* LEFT */}
+                    <div className="rounded-3xl bg-white p-6 shadow-lg space-y-4">
+                        <div>
+                            <p className="text-xs text-slate-500">Date</p>
+                            <p className="font-semibold text-slate-900">
+                                {booking.booking_date}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-slate-500">Time Slot</p>
+                            <p className="font-semibold text-slate-900">
+                                {booking.start_time.slice(0, 5)} –{" "}
+                                {booking.end_time.slice(0, 5)}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-slate-500">Created</p>
+                            <p className="text-sm text-slate-700">
+                                {new Date(booking.created_at).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* RIGHT */}
+                    <div className="rounded-3xl bg-white p-6 shadow-lg space-y-4">
+                        <div>
+                            <p className="text-xs text-slate-500">Total Amount</p>
+                            <p className="text-4xl font-bold tracking-tight text-slate-900">
+                                ₹{booking.amount}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                            <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColor[booking.status]}`}
+                            >
+                                {booking.status}
+                            </span>
+
+                            <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentColor[booking.payment_status]}`}
+                            >
+                                {booking.payment_status}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {booking.status != "CONFIRMED" && (
+                <div className="rounded-3xl bg-white p-6 shadow-lg space-y-4">
+                    {booking.payment_status === "INITIATED" && (
+                        <button onClick={() => alert("Redirect to payment gateway")} className="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 py-3 text-sm font-semibold text-white hover:opacity-90">
+                            Pay Now
+                        </button>
+                    )}
+
+                    {booking.payment_status != "SUCCESS" && booking.status != "CANCELLED" && (
+                            <button
+                                onClick={cancelBooking}
+                                disabled={actionLoading}
+                                className="w-full rounded-xl border border-red-300 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+                            >
+                                {actionLoading ? "Cancelling…" : "Cancel Booking"}
+                            </button>
                         )}
-                    </>
+
+                    {booking.status === "CANCELLED" && (
+                        <p className="text-center text-sm font-medium text-red-600">
+                            This booking has been cancelled
+                        </p>
+                    )}
+
+                    {booking.status === "REFUNDED" && (
+                        <p className="text-center text-sm font-medium text-blue-600">
+                            Amount refunded successfully
+                        </p>
+                    )}
+                </div>
                 )}
             </div>
         </div>

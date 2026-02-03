@@ -1,18 +1,27 @@
 export default function RoleToggle({ role, setRole }) {
   return (
-    <div className="flex gap-3">
-      {["user", "business"].map(r => (
-        <button
-          key={r}
-          onClick={() => setRole(r)}
-          className="flex-1 py-2 rounded-xl font-semibold"
-          style={{
-            background: role === r ? "#FF9B51" : "#BFC9D1"
-          }}
-        >
-          {r === "user" ? "User" : "Business"}
-        </button>
-      ))}
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        onClick={() => setRole("user")}
+        className={`rounded-xl py-2 text-sm font-medium transition
+          ${role === "user"
+            ? "bg-slate-900 text-white"
+            : "bg-slate-100 text-slate-600 hover:bg-slate-200"}
+        `}
+      >
+        User
+      </button>
+
+      <button
+        onClick={() => setRole("business")}
+        className={`rounded-xl py-2 text-sm font-medium transition
+          ${role === "business"
+            ? "bg-slate-900 text-white"
+            : "bg-slate-100 text-slate-600 hover:bg-slate-200"}
+        `}
+      >
+        Business
+      </button>
     </div>
   );
 }
