@@ -15,12 +15,7 @@ class Turf(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
 
-    length = models.FloatField()
-    breadth = models.FloatField()
-    height = models.FloatField()
-
     is_open = models.BooleanField(default=True)
-    price = models.IntegerField()
 
     opening_time = models.TimeField(default="06:00")
     closing_time = models.TimeField(default="23:00")

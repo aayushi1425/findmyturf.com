@@ -1,9 +1,15 @@
 from rest_framework import serializers
-from datetime import datetime
 from app.models.booking import Booking
 
-from app.models.booking import Booking , BookingStatus , PaymentStatus
-
+class BookingCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = [
+            "court",
+            "booking_date",
+            "start_time",
+            "end_time",
+        ]
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,9 +17,9 @@ class BookingSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = [
             "id",
-            "custumer",
+            "user",
             "amount",
-            "created_at",
+            "status",
             "payment_status",
             "provider_payment_id",
             "payment_provider",
@@ -67,8 +73,10 @@ class BookingSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 class OwnerBookingSerializer(serializers.ModelSerializer):
-    customer_name = serializers.ReadOnlyField(source="custumer.name")
-    customer_phone = serializers.ReadOnlyField(source="custumer.phone_no")
+    customer_name = serializers.ReadOnlyField(source="user.name")
+    customer_phone = serializers.ReadOnlyField(source="user.phone_no")
+    court_id = serializers.ReadOnlyField(source="court.id")
+    sport_type = serializers.ReadOnlyField(source="court.sports_type")
 
     class Meta:
         model = Booking
@@ -82,12 +90,17 @@ class OwnerBookingSerializer(serializers.ModelSerializer):
             "payment_status",
             "customer_name",
             "customer_phone",
-            "created_at"
+            "sport_type",
+            "court_id",
+            "created_at",
         ]
 
+
 class BookingDetailSerializer(serializers.ModelSerializer):
-    turf_name = serializers.ReadOnlyField(source="turf.name")
-    turf_city = serializers.ReadOnlyField(source="turf.city")
+    court_id = serializers.ReadOnlyField(source="court.id")
+    turf_name = serializers.ReadOnlyField(source="court.turf.name")
+    turf_city = serializers.ReadOnlyField(source="court.turf.city")
+    sport_type = serializers.ReadOnlyField(source="court.sports_type")
 
     class Meta:
         model = Booking

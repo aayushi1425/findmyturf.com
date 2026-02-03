@@ -1,57 +1,91 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
 from datetime import datetime
 
-from app.models.turf import Turf
-from app.models.booking import Booking, BookingStatus, PaymentStatus
+from app.models.court import Court
+from app.models.booking import Booking, BookingStatus
 from app.utils.slots import generate_hour_slots
 
-class TurfAvailableSlotsView(APIView):
-    def get(self, request, turf_id):
+
+class CourtAvailableSlotsView(APIView):
+    def get(self, request, court_id):
         date_str = request.query_params.get("date")
 
         if not date_str:
-            return Response(
-                {"error": "date query param is required"},
+            return Response({"error": "date query param is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        try:
+            booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return Response({"error": "Invalid date format. Use YYYY-MM-DD"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        turf = Turf.objects.get(id=turf_id)
-
+        try:
+            court = Court.objects.select_related("turf").get(id=court_id)
+        except Court.DoesNotExist:
+            return Response({"error": "Court not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        
         all_slots = generate_hour_slots(
-            turf.opening_time,
-            turf.closing_time
+            court.turf.opening_time,
+            court.turf.closing_time,
         )
 
         bookings = Booking.objects.filter(
-            turf=turf,
+            court=court,
             booking_date=booking_date,
-            status=BookingStatus.CONFIRMED,
-            payment_status=PaymentStatus.SUCCESS
+            status__in=[BookingStatus.PENDING, BookingStatus.CONFIRMED],
         )
 
         available_slots = []
-
         for slot in all_slots:
             slot_start = slot["start_time"]
             slot_end = slot["end_time"]
 
             conflict = bookings.filter(
                 start_time__lt=slot_end,
-                end_time__gt=slot_start
+                end_time__gt=slot_start,
             ).exists()
 
             if not conflict:
                 available_slots.append({
-                    "start_time": slot_start.strftime("%H:%M"),
-                    "end_time": slot_end.strftime("%H:%M"),
-                })
+                        "start_time": slot_start.strftime("%H:%M"),
+                        "end_time": slot_end.strftime("%H:%M"),
+                    }
+                )
+
+        today = timezone.localdate()
+
+        if booking_date < today:
+            available_slots = []
+
+        elif booking_date == today:
+            now = timezone.localtime()
+            filtered = []
+
+            for slot in available_slots:
+                slot_start_time = datetime.strptime(slot["start_time"], "%H:%M").time()
+
+                slot_start_dt = timezone.make_aware(
+                    datetime.combine(booking_date, slot_start_time)
+                )
+
+                if slot_start_dt > now:
+                    filtered.append(slot)
+
+            available_slots = filtered
 
         return Response({
-            "turf_id": str(turf.id),
-            "date": booking_date,
-            "available_slots": available_slots,
-        })
+                "court_id": str(court.id),
+                "turf_id": str(court.turf.id),
+                "sport_type": court.sports_type,
+                "date": booking_date,
+                "available_slots": available_slots,
+            }
+        )

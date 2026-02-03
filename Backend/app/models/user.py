@@ -11,6 +11,8 @@ class UserType(Enum):
 
 class User(AbstractUser):
     username = None
+    first_name = None
+    last_name = None
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, null=True)
     phone_no = models.CharField(max_length=15, unique=True, null=True)

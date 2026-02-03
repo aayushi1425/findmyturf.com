@@ -1,47 +1,26 @@
 from rest_framework import serializers
-from app.models.user import User, UserType
-from app.models.business import Business
+from app.models.user import User
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['name', 'phone_no', 'password']
-
-    def create(self, data):
-        return User.objects.create_user(
-            phone_no=data['phone_no'],
-            password=data['password'],
-            name=data['name'],
-            user_type=UserType.USER.value
-        )
-
+        fields = [
+            "name",
+            "phone_no",
+            "password",
+        ]
 
 class OwnerRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    business_name = serializers.CharField()
-    tenant = serializers.CharField()
+    business_name = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['name', 'phone_no', 'password', 'business_name', 'tenant']
-
-    def create(self, data):
-        business_name = data.pop('business_name')
-        tenant = data.pop('tenant')
-
-        user = User.objects.create_user(
-            phone_no=data['phone_no'],
-            password=data['password'],
-            name=data['name'],
-            user_type=UserType.OWNER.value
-        )
-
-        Business.objects.create(
-            user=user,
-            name=business_name,
-            tenant=tenant
-        )
-
-        return user
+        fields = [
+            "name",
+            "phone_no",
+            "password",
+            "business_name",
+        ]

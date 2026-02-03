@@ -4,13 +4,14 @@ from app.serializers.turf_image import TurfImageSerializer
 
 class TurfSerializer(serializers.ModelSerializer):
     images = TurfImageSerializer(many=True, read_only=True)
-    default_image = serializers.SerializerMethodField()
+    default_image = serializers.CharField(read_only=True)
 
     class Meta:
         model = Turf
-        fields = '__all__'
-        read_only_fields = ['id', 'business', 'created_at']
-
-    def get_default_image(self, obj):
-        default = obj.images.filter(is_default=True).first()
-        return default.image.url if default else None
+        fields = "__all__"
+        read_only_fields = [
+            "id",
+            "business",
+            "created_at",
+            "updated_at",
+        ]

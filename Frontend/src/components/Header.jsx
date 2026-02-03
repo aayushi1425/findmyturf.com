@@ -12,7 +12,6 @@ export default function Header() {
         </h1>
 
         <div className="flex gap-3">
-          
 
           <button
             onClick={() => navigate("/login")}

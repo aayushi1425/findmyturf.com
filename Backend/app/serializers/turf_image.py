@@ -6,5 +6,14 @@ class TurfImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TurfImage
-        fields = ['id', 'image', 'image_url', 'is_default']
-        read_only_fields = ['id', 'image_url']
+        fields = [
+            "id",
+            "turf",
+            "image",
+            "image_url",
+            "is_default",
+        ]
+        read_only_fields = [
+            "id",
+            "image_url",
+        ]

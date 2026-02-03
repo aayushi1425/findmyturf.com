@@ -6,7 +6,6 @@ class Business(models.Model):
     id = models.UUIDField(primary_key = True, default = uuid.uuid4 )
     user = models.OneToOneField(User , on_delete = models.CASCADE )
     name = models.CharField(max_length = 100 , null = True)
-    tenant = models.CharField(max_length = 25 , unique = True , null = True)
     gstno = models.CharField(max_length = 15 , null = True)
 
     class Meta:
@@ -14,7 +13,6 @@ class Business(models.Model):
         indexes = [
             models.Index(fields=['id'], name='business_id_idx'),
             models.Index(fields=['user'], name='user_idx'),
-            models.Index(fields=['tenant'], name='tenant_idx'),
         ]
 
     def __str__(self):
