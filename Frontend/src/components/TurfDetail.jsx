@@ -41,7 +41,6 @@ export default function TurfDetail() {
         return defaultImg?.image_url || turf.images[0].image_url;
     }
 
-
     async function fetchTurf() {
         try {
             const turfRes = await api.get(`/turf/${id}/`);
@@ -87,21 +86,13 @@ export default function TurfDetail() {
             });
 
             navigate(`/booking/${res.data.id}`);
-        }
-        catch (err) {
+        } catch (err) {
             if (err.response?.status === 401) {
                 navigate("/login");
+            } else {
+                toast.error(err.response?.data?.error || "Booking failed");
             }
-            else {
-                toast.error(err.response.data.error, {
-                    style: {
-                        width: "auto",
-                        whiteSpace: "pre-wrap",
-                    },
-                });
-            }
-        }
-        finally {
+        } finally {
             setBookingLoading(false);
         }
     }
@@ -143,6 +134,19 @@ export default function TurfDetail() {
                         <p className="mt-1 text-slate-600">
                             {turf.location}, {turf.city}, {turf.state}
                         </p>
+                         
+                        <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                turf.latitude != null && turf.longitude != null
+                                    ? `${turf.latitude},${turf.longitude}`
+                                    : `${turf.location || ""}, ${turf.city}, ${turf.state}`.trim()
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-flex items-left rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-900 hover:bg-slate-50"
+                        >
+                         📍 Open Maps
+                        </a>
 
                         <p className="mt-4 text-sm text-slate-700">
                             Timings: {turf.opening_time} – {turf.closing_time}
@@ -167,11 +171,11 @@ export default function TurfDetail() {
                                         key={court.id}
                                         onClick={() => setSelectedCourt(court)}
                                         className={`rounded-xl border px-3 py-2 text-sm font-medium transition
-                      ${selectedCourt?.id === court.id
+                                        ${
+                                            selectedCourt?.id === court.id
                                                 ? "border-slate-900 bg-slate-900 text-white"
                                                 : "border-slate-200 hover:border-slate-900"
-                                            }
-                    `}
+                                        }`}
                                     >
                                         {court.sports_type}
                                         <div className="text-xs opacity-80">
@@ -220,11 +224,11 @@ export default function TurfDetail() {
                             }
                             onClick={handleBooking}
                             className={`mt-2 w-full rounded-xl py-3 text-sm font-semibold transition
-                ${selectedSlots.length > 0
+                            ${
+                                selectedSlots.length > 0
                                     ? "bg-slate-900 text-white hover:bg-slate-800"
                                     : "cursor-not-allowed bg-slate-200 text-slate-500"
-                                }
-              `}
+                            }`}
                         >
                             {bookingLoading ? "Booking..." : "Confirm Booking"}
                         </button>
