@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api";
-import SlotSelector from "../components/SlotSelector";
+import SlotSelector from "../components/Slotselector";
 import BookingSummary from "../components/BookingSummary";
+import RazorpayButton from "../components/RazorpayButton";
 
 export default function TurfDetail() {
     const { id } = useParams();
@@ -78,6 +79,7 @@ export default function TurfDetail() {
         setBookingLoading(true);
 
         try {
+            // Create booking in pending state on server
             const res = await api.post("/booking/create/", {
                 court: selectedCourt.id,
                 booking_date: selectedDate,
@@ -85,13 +87,21 @@ export default function TurfDetail() {
                 end_time: selectedSlots[selectedSlots.length - 1].end_time,
             });
 
-            navigate(`/booking/${res.data.id}`);
+            const bookingId = res.data.id;
+            const amount = Math.round(selectedSlots.length * selectedCourt.price); // rupees
+
+            // Open Razorpay checkout immediately via created component helper
+            // RazorpayButton will call backend /payment/razorpay/create-order/ and verify payment.
+            // We render the button programmatically by calling its handler here.
+            // For simplicity, navigate to an inline payment page (route) or open a modal.
+            // Here we navigate to a dedicated payment page where RazorpayButton can be rendered.
+            navigate(`/booking/${bookingId}/pay`, { state: { amount } });
         } catch (err) {
             if (err.response?.status === 401) {
                 navigate("/login");
             }
             else {
-                alert(err.response.data.error);
+                alert(err.response?.data?.error || 'Booking error');
             }
         } finally {
             setBookingLoading(false);

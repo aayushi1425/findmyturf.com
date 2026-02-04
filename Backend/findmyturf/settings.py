@@ -6,8 +6,16 @@ from dotenv import load_dotenv
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-z9l(xfyk5i0ruehq8d!eqk97_x^qeiixnjn23^h#mf4wwji)yu'
+
+# Safely load DATABASE_URL and ensure it's a str (urlparse returns bytes components
+# if given bytes input). Some env loaders may provide bytes, so decode when needed.
+# raw_db_url = os.getenv("DATABASE_URL") or ""
+# if isinstance(raw_db_url, (bytes, bytearray)):
+#     raw_db_url = raw_db_url.decode('utf-8')
+# tmpPostgres = urlparse(raw_db_url)
+
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*.ngrok-free.app', '*.ngrok.io', 'noncolloidal-ellie-scrappily.ngrok-free.dev']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -21,7 +29,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'cloudinary',
     'cloudinary_storage',
-    'app'
+    'app',
+    'corsheaders',  
 ]
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
@@ -79,7 +88,7 @@ AUTH_PASSWORD_VALIDATORS = [{
 
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Calcutta'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 STATIC_URL = 'static/'
@@ -113,12 +122,37 @@ DATABASES = {
     }
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+# Cache configuration: prefer Redis (django-redis) when REDIS_HOST is provided and the
+# django_redis package is available. Fall back to a local in-memory cache for
+# development to avoid import-time crashes when redis or django-redis is not installed.
+if os.getenv("REDIS_HOST") and os.getenv("REDIS_PORT"):
+    try:
+        # try to import django_redis to ensure it's installed
+        import django_redis  # noqa: F401
+
+        CACHES = {
+            "default": {
+                "BACKEND": "django_redis.cache.RedisCache",
+                "LOCATION": f"redis://{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/1",
+                "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+            }
+        }
+    except Exception:
+        # django_redis not installed or import failed -> use local memory cache
+        CACHES = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            }
+        }
+else:
+    # No redis configured -> use local memory cache by default for development
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         }
     }
-}
+# Razorpay configuration (read from environment). Keep empty defaults to avoid breaking when not set.
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+# Webhook secret used to verify incoming Razorpay webhook signatures
+RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
