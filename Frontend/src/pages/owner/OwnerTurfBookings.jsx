@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../../api";
+import PageLayout from "../../components/PageLayout";
 
 export default function OwnerTurfBookings() {
     const { turfId } = useParams();
@@ -39,7 +40,8 @@ export default function OwnerTurfBookings() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 px-6 py-10">
+        <PageLayout>
+        <div className="min-h-screen px-6 py-10">
             <div className="mx-auto max-w-6xl space-y-6">
 
                 {/* HEADER */}
@@ -137,5 +139,6 @@ export default function OwnerTurfBookings() {
                 )}
             </div>
         </div>
+        </PageLayout>
     );
 }

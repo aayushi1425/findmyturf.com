@@ -1,6 +1,7 @@
 from app.models.turf import Turf
 from rest_framework import status
 from app.models.court import Court
+from django.db.models import Q
 from app.permission import IsOwner
 from app.utils.geo import haversine
 from rest_framework.views import APIView
@@ -8,6 +9,9 @@ from app.pagination import TurfPagination
 from rest_framework.response import Response
 from app.serializers.turf import TurfSerializer
 from rest_framework.permissions import IsAuthenticated
+
+# Default radius in km for location-based filtering
+DEFAULT_RADIUS = 25
 
 class TurfCreateView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
@@ -56,9 +60,15 @@ class TurfListView(APIView):
         city = request.query_params.get("city")
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
+        sports_type = request.query_params.get("sports_type")
 
         if city:
-            queryset = queryset.filter(city__iexact=city)
+            queryset = queryset.filter(
+                Q(city__iexact=city) | Q(location__icontains=city)
+            )
+
+        if sports_type:
+            queryset = queryset.filter(courts__sports_type__iexact=sports_type).distinct()
 
         if min_price or max_price:
             court_filter = Court.objects.filter(turf__in=queryset)
@@ -70,9 +80,12 @@ class TurfListView(APIView):
                 court_filter = court_filter.filter(price__lte=max_price)
             queryset = queryset.filter(id__in=court_filter.values("turf_id"))
 
+        # Location-based filtering
+
         lat = request.query_params.get("lat")
         lon = request.query_params.get("lon")
-        radius = float(request.query_params.get("radius", 10))
+        radius_str = request.query_params.get("radius")
+        radius = float(radius_str) if radius_str else DEFAULT_RADIUS  # Use default radius if not provided
         sort = request.query_params.get("sort")
 
         results = []
@@ -81,18 +94,24 @@ class TurfListView(APIView):
             lat = float(lat)
             lon = float(lon)
 
+            # Filter turfs within the specified radius
             for turf in queryset:
                 distance = haversine(lat, lon, turf.latitude, turf.longitude)
-
                 if distance <= radius:
                     data = TurfSerializer(turf).data
                     data["distance_km"] = round(distance, 2)
                     results.append(data)
 
-            if sort == "distance":
-                results.sort(key=lambda x: x["distance_km"])
+            if results:  # If location-based filter has results
+                if sort == "distance":
+                    results.sort(key=lambda x: x["distance_km"])
+            else:
+                # Fallback: show default list of latest turfs if no results within radius
+                # Use the filtered queryset (by city/price) ordered by latest
+                results = TurfSerializer(queryset.order_by('-created_at'), many=True).data
         else:
-            results = TurfSerializer(queryset, many=True).data
+            # No user location provided: show fallback default list of latest turfs
+            results = TurfSerializer(queryset.order_by('-created_at'), many=True).data
 
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(results, request)

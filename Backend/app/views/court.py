@@ -69,10 +69,16 @@ class CourtUpdateView(APIView):
 
 class TurfCourtsView(APIView):
     def get(self, request, turf_id):
-        courts = Court.objects.filter(
-            turf_id=turf_id,
-            is_open=True,
-        )
+        if request.user.is_authenticated and request.user.user_type == "OWNER":
+            courts = Court.objects.filter(
+                turf_id=turf_id,
+            )
+        else:
+            courts = Court.objects.filter(
+                turf_id=turf_id,
+                is_open=True,
+            )
+
 
         return Response(CourtSerializer(courts, many=True).data,
             status=status.HTTP_200_OK,

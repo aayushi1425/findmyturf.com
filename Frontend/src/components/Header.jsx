@@ -7,7 +7,7 @@ export default function Header() {
   const { token, role, logout } = useContext(AuthContext);
 
   return (
-    <header className="bg-white border-b border-slate-200">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
         {/* LOGO */}

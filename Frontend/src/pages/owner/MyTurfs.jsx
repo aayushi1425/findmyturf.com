@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
+import PageLayout from "../../components/PageLayout";
+import { ListShimmerGrid, TurfCardShimmer } from "../../components/Shimmers";
 
 export default function MyTurfs() {
   const navigate = useNavigate();
@@ -24,8 +26,9 @@ export default function MyTurfs() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-10">
-      <div className="mx-auto max-w-6xl space-y-8">
+    <PageLayout>
+      <div className="min-h-screen px-6 py-10">
+        <div className="mx-auto max-w-6xl space-y-8">
 
         {/* HEADER */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -48,9 +51,11 @@ export default function MyTurfs() {
 
         {/* CONTENT */}
         {loading ? (
-          <div className="py-24 text-center text-slate-500">
-            Loading your turfs...
-          </div>
+          <ListShimmerGrid
+            count={6}
+            gapClassName="gap-6"
+            renderItem={(index) => <TurfCardShimmer key={index} />}
+          />
         ) : turfs.length === 0 ? (
           <div className="rounded-3xl bg-white p-10 text-center shadow">
             <h3 className="text-lg font-semibold text-slate-900">
@@ -78,8 +83,9 @@ export default function MyTurfs() {
             ))}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

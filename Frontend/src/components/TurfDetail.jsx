@@ -4,6 +4,7 @@ import api from "../api";
 import { toast } from "react-toastify";
 import SlotSelector from "../components/SlotSelector";
 import BookingSummary from "../components/BookingSummary";
+import PageLayout from "./PageLayout";
 
 export default function TurfDetail() {
     const { id } = useParams();
@@ -106,14 +107,6 @@ export default function TurfDetail() {
         }
     }
 
-    if (loading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center text-slate-500">
-                Loading turf details...
-            </div>
-        );
-    }
-
     if (!turf) {
         return (
             <div className="flex min-h-screen items-center justify-center text-red-500">
@@ -123,31 +116,45 @@ export default function TurfDetail() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 px-6 py-10">
+        <PageLayout>
+        <div className="min-h-screen px-6 py-10">
             <div className="mx-auto max-w-6xl grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {/* LEFT */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-                        <img
-                            src={getTurfImage(turf)}
-                            alt={turf.name}
-                            className="h-80 w-full object-cover"
-                        />
-                    </div>
+                    {loading ? (
+                        <>
+                            <div className="h-80 w-full overflow-hidden rounded-2xl bg-slate-200 animate-pulse" />
+                            <div className="space-y-3 rounded-2xl bg-white p-6 shadow-sm">
+                                <div className="h-5 w-1/2 rounded bg-slate-200 animate-pulse" />
+                                <div className="h-4 w-1/3 rounded bg-slate-200 animate-pulse" />
+                                <div className="mt-2 h-3 w-1/4 rounded bg-slate-200 animate-pulse" />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+                                <img
+                                    src={getTurfImage(turf)}
+                                    alt={turf.name}
+                                    className="h-80 w-full object-cover"
+                                />
+                            </div>
 
-                    <div className="rounded-2xl bg-white p-6 shadow-sm">
-                        <h1 className="text-2xl font-bold text-slate-900">
-                            {turf.name}
-                        </h1>
+                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                                <h1 className="text-2xl font-bold text-slate-900">
+                                    {turf.name}
+                                </h1>
 
-                        <p className="mt-1 text-slate-600">
-                            {turf.location}, {turf.city}, {turf.state}
-                        </p>
+                                <p className="mt-1 text-slate-600">
+                                    {turf.location}, {turf.city}, {turf.state}
+                                </p>
 
-                        <p className="mt-4 text-sm text-slate-700">
-                            Timings: {turf.opening_time} – {turf.closing_time}
-                        </p>
-                    </div>
+                                <p className="mt-4 text-sm text-slate-700">
+                                    Timings: {turf.opening_time} – {turf.closing_time}
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* RIGHT */}
@@ -161,39 +168,53 @@ export default function TurfDetail() {
                                 Select Court
                             </p>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                {courts.map((court) => (
-                                    <button
-                                        key={court.id}
-                                        onClick={() => setSelectedCourt(court)}
-                                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition
+                            {loading ? (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="h-10 rounded-xl bg-slate-200 animate-pulse" />
+                                    <div className="h-10 rounded-xl bg-slate-200 animate-pulse" />
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3">
+                                    {courts.map((court) => (
+                                        <button
+                                            key={court.id}
+                                            onClick={() => setSelectedCourt(court)}
+                                            className={`rounded-xl border px-3 py-2 text-sm font-medium transition
                       ${selectedCourt?.id === court.id
                                                 ? "border-slate-900 bg-slate-900 text-white"
                                                 : "border-slate-200 hover:border-slate-900"
                                             }
                     `}
-                                    >
-                                        {court.sports_type}
-                                        <div className="text-xs opacity-80">
-                                            ₹{court.price}/hr
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
+                                        >
+                                            {court.sports_type}
+                                            <div className="text-xs opacity-80">
+                                                ₹{court.price}/hr
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* DATE */}
-                        <input
-                            type="date"
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm"
-                        />
+                        {loading ? (
+                            <div className="h-10 w-full rounded-xl bg-slate-200 animate-pulse" />
+                        ) : (
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm"
+                            />
+                        )}
 
                         {/* SLOTS */}
-                        {selectedCourt && (
+                        {!loading && selectedCourt && (
                             slotLoading ? (
-                                <p className="text-sm text-slate-500">Loading slots...</p>
+                                <div className="space-y-2">
+                                    <div className="h-4 w-24 rounded bg-slate-200 animate-pulse" />
+                                    <div className="h-10 rounded-xl bg-slate-200 animate-pulse" />
+                                </div>
                             ) : slots.length === 0 ? (
                                 <p className="text-sm text-red-500">No slots available</p>
                             ) : (
@@ -214,6 +235,7 @@ export default function TurfDetail() {
 
                         <button
                             disabled={
+                                loading ||
                                 !selectedCourt ||
                                 selectedSlots.length === 0 ||
                                 bookingLoading
@@ -232,5 +254,6 @@ export default function TurfDetail() {
                 </div>
             </div>
         </div>
+        </PageLayout>
     );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api";
+import PageLayout from "../../components/PageLayout";
 
 const SPORTS = [
   "CRICKET",
@@ -62,6 +63,7 @@ export default function AddCourt() {
   };
 
   return (
+    <PageLayout>
     <div className="mx-auto max-w-2xl px-4 py-10">
       <form
         onSubmit={handleSubmit}
@@ -178,5 +180,6 @@ export default function AddCourt() {
         </button>
       </form>
     </div>
+    </PageLayout>
   );
 }

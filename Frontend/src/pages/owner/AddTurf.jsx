@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
+import PageLayout from "../../components/PageLayout";
 
 const createTurf = (data) =>
   api.post("/turf/create/", data);
@@ -106,7 +107,8 @@ export default function AddTurf() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <PageLayout>
+    <div className="mx-auto max-w-3xl px-6 py-10">
       <form
         onSubmit={handleSubmit}
         className="rounded-3xl bg-white p-8 shadow-sm space-y-8"
@@ -224,5 +226,6 @@ export default function AddTurf() {
         </button>
       </form>
     </div>
+    </PageLayout>
   );
 }
