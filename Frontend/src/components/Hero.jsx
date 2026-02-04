@@ -29,7 +29,7 @@ export default function Hero() {
             </button>
 
             <button
-              onClick={() => navigate("/business/login")}
+              onClick={() => navigate("/login")}
               className="px-6 py-3 border border-slate-300 rounded-xl font-medium hover:bg-slate-100"
             >
               List Your Turf

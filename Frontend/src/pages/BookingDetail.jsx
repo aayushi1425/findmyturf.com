@@ -50,7 +50,6 @@ export default function BookingDetail() {
             fetchBooking();
         } catch (err) {
             // console.error(err.response.data.error);
-            console.log("f");
         } finally {
             setActionLoading(false);
         }
@@ -183,9 +182,8 @@ export default function BookingDetail() {
                     </div>
                 </div>
 
-                {booking.status != "CONFIRMED" || booking.payment_status != "CANCELLED" && (
                     <div className="rounded-3xl bg-white p-6 shadow-lg space-y-4">
-                        {booking.payment_status === "INITIATED" && (
+                        {booking.payment_status === "INITIATED" && booking.status != "CANCELLED" && (
                             <button onClick={() => alert("Redirect to payment gateway")} className="w-full rounded-xl bg-linear-to-br from-slate-900 to-slate-800 py-3 text-sm font-semibold text-white hover:opacity-90">
                                 Pay Now
                             </button>
@@ -213,7 +211,7 @@ export default function BookingDetail() {
                             </p>
                         )}
                     </div>
-                )}
+                
             </div>
         </div>
     );

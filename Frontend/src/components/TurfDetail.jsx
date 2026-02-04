@@ -91,7 +91,7 @@ export default function TurfDetail() {
                 navigate("/login");
             }
             else {
-                alert("Slot unavailable or already booked");
+                alert(err.response.data.error);
             }
         } finally {
             setBookingLoading(false);

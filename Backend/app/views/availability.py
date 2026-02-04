@@ -48,6 +48,7 @@ class CourtAvailableSlotsView(APIView):
             conflict = bookings.filter(
                 start_time__lt=slot_end,
                 end_time__gt=slot_start,
+                status__in=BookingStatus.CONFIRMED,
             ).exists()
 
             if not conflict:

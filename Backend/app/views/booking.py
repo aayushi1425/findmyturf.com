@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +8,7 @@ from app.models.court import Court
 from app.utils.notify import notifyMessage
 from app.models.booking import Booking, BookingStatus, PaymentStatus
 from app.serializers.booking import BookingCreateSerializer , BookingSerializer, BookingDetailSerializer
+from app.utils.notify import notifyMessage
 
 class BookingCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -29,15 +30,25 @@ class BookingCreateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        conflict = Booking.objects.filter(
+        conflicts = Booking.objects.filter(
             court=court,
             booking_date=booking_date,
             start_time__lt=end,
             end_time__gt=start,
-            status__in=[BookingStatus.PENDING, BookingStatus.CONFIRMED],
-        ).exists()
+            status__in=[BookingStatus.CONFIRMED, BookingStatus.PENDING],
+        )
 
-        if conflict:
+        has_conflict = conflicts.exists()
+        is_pending = conflicts.filter(status=BookingStatus.PENDING).exists()
+
+        if is_pending:
+            cache.set(f"booking:{court.id}:{booking_date}:{start}:{end}", request.user.phone_no , 60*60)
+            return Response(
+                {"error": "This slot is currently in booking stage we will notify you if the slot cancels."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if has_conflict:
             return Response(
                 {"error": "This slot is already booked"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -123,7 +134,12 @@ class CancelBookingView(APIView):
             )
 
         booking.status = BookingStatus.CANCELLED
-
+        Number = cache.get(f"booking:{booking.court.id}:{booking.booking_date}:{booking.start_time}:{booking.end_time}", None)
+        if Number:
+            notifyMessage(f"The slot ({booking.start_time}-{booking.end_time}) has been cancelled , you can book it visiting the site",
+                Number,
+            )
+        cache.delete(f"booking:{booking.court.id}:{booking.booking_date}:{booking.start_time}:{booking.end_time}")
         booking.save()
 
         notifyMessage(f"Your booking ({booking.id}) has been cancelled",

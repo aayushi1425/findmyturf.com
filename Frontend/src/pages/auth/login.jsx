@@ -24,7 +24,13 @@ export default function Login() {
             });
 
             login(res.data.access);
-            navigate("/turfs");
+
+            if (res.data.role == "OWNER"){
+                navigate("/owner/turfs");
+            }
+            else {
+                navigate("/turfs");
+            }
         } catch (err) {
             setError("Invalid phone number or password");
         } finally {
