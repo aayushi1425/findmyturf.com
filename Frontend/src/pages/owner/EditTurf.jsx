@@ -19,9 +19,14 @@ export default function EditTurf() {
         is_open: true,
     });
 
+    const [images, setImages] = useState([]);        // existing images
+    const [newImages, setNewImages] = useState([]);  // newly selected images
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
+
+    const MAX_IMAGES = 5;
 
     useEffect(() => {
         fetchTurf();
@@ -44,6 +49,8 @@ export default function EditTurf() {
                 closing_time: t.closing_time?.slice(0, 5),
                 is_open: t.is_open,
             });
+
+            setImages(t.images || []);
         } catch (err) {
             console.error(err);
             setError("Failed to load turf details");
@@ -60,6 +67,55 @@ export default function EditTurf() {
         }));
     };
 
+    const handleNewImageSelect = (e) => {
+        const files = Array.from(e.target.files);
+
+        setNewImages((prev) =>
+            [...prev, ...files].slice(0, MAX_IMAGES - images.length)
+        );
+
+        e.target.value = "";
+    };
+
+    const removeNewImage = (index) => {
+        setNewImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        await api.post(
+            `/turf/${turfId}/image/upload/`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+        );
+    }
+
+    /* ---------------- IMAGE ACTIONS ---------------- */
+
+    async function setDefaultImage(imageId) {
+        try {
+            await api.post(`/turf/image/${imageId}/set-default/`);
+            fetchTurf();
+        } catch {
+            alert("Failed to set default image");
+        }
+    }
+
+    async function deleteImage(imageId) {
+        if (!window.confirm("Delete this image?")) return;
+
+        try {
+            await api.delete(`/turf/image/${imageId}/delete/`);
+            fetchTurf();
+        } catch {
+            alert("Failed to delete image");
+        }
+    }
+
+    /* ---------------- SUBMIT ---------------- */
+
     async function handleSubmit(e) {
         e.preventDefault();
         setSaving(true);
@@ -71,6 +127,11 @@ export default function EditTurf() {
                 latitude: form.latitude ? parseFloat(form.latitude) : null,
                 longitude: form.longitude ? parseFloat(form.longitude) : null,
             });
+
+            // upload new images sequentially
+            for (const img of newImages) {
+                await uploadImage(img);
+            }
 
             navigate("/owner/turfs");
         } catch (err) {
@@ -92,20 +153,11 @@ export default function EditTurf() {
     return (
         <div className="min-h-screen bg-slate-50 px-6 py-10">
             <div className="mx-auto max-w-3xl">
-
                 <form
                     onSubmit={handleSubmit}
                     className="space-y-8 rounded-3xl bg-white p-8 shadow-sm"
                 >
-                    {/* HEADER */}
-                    <header>
-                        <h1 className="text-2xl font-bold text-slate-900">
-                            Edit Turf
-                        </h1>
-                        <p className="mt-1 text-sm text-slate-500">
-                            Update turf details and availability
-                        </p>
-                    </header>
+                    <h1 className="text-2xl font-bold">Edit Turf</h1>
 
                     {error && (
                         <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
@@ -114,127 +166,107 @@ export default function EditTurf() {
                     )}
 
                     {/* BASIC INFO */}
+                    <input className="input" name="name" value={form.name} onChange={handleChange} />
+                    <textarea className="input" name="description" value={form.description} onChange={handleChange} />
+                    <input className="input" name="location" value={form.location} onChange={handleChange} />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <input className="input" name="city" value={form.city} onChange={handleChange} />
+                        <input className="input" name="state" value={form.state} onChange={handleChange} />
+                    </div>
+
+                    {/* IMAGES */}
                     <section className="space-y-4">
-                        <h2 className="font-semibold text-slate-900">
-                            Turf Information
-                        </h2>
+                        <h2 className="font-semibold">Turf Images</h2>
 
-                        <input
-                            className="input"
-                            name="name"
-                            value={form.name}
-                            onChange={handleChange}
-                            placeholder="Turf Name"
-                            required
-                        />
+                        <div className="grid grid-cols-3 gap-4">
+                            {images.map((img) => (
+                                <div key={img.id} className="relative border rounded-xl overflow-hidden">
+                                    <img src={img.image_url} className="h-28 w-full object-cover" />
 
-                        <textarea
-                            className="input"
-                            name="description"
-                            value={form.description}
-                            onChange={handleChange}
-                            placeholder="Description"
-                            rows={3}
-                        />
+                                    {img.is_default && (
+                                        <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                                            Default
+                                        </span>
+                                    )}
 
-                        <input
-                            className="input"
-                            name="location"
-                            value={form.location}
-                            onChange={handleChange}
-                            placeholder="Area / Landmark"
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <input
-                                className="input"
-                                name="city"
-                                value={form.city}
-                                onChange={handleChange}
-                                placeholder="City"
-                            />
-                            <input
-                                className="input"
-                                name="state"
-                                value={form.state}
-                                onChange={handleChange}
-                                placeholder="State"
-                            />
+                                    <div className="absolute bottom-2 left-2 right-2 flex gap-1">
+                                        {!img.is_default && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setDefaultImage(img.id)}
+                                                className="flex-1 bg-black/70 text-white text-xs py-1 rounded"
+                                            >
+                                                Make Default
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteImage(img.id)}
+                                            className="bg-red-600 text-white text-xs px-2 rounded"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+
+                        {images.length < MAX_IMAGES && (
+                            <>
+                                <label className="block">
+                                    <span className="mb-2 block text-sm font-medium text-slate-700">
+                                        Upload Images
+                                    </span>
+
+                                    <div className="relative flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 transition hover:border-slate-900 hover:bg-slate-100">
+                                        <div className="text-center">
+                                            <p className="text-sm font-medium text-slate-700">
+                                                Click to upload or drag & drop
+                                            </p>
+                                            <p className="mt-1 text-xs text-slate-500">
+                                                PNG, JPG up to 5MB (max 5 images)
+                                            </p>
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleNewImageSelect}
+                                            className="absolute inset-0 cursor-pointer opacity-0"
+                                        />
+                                    </div>
+                                </label>
+
+
+                                <div className="grid grid-cols-3 gap-4">
+                                    {newImages.map((file, i) => (
+                                        <div key={i} className="relative border rounded-xl overflow-hidden">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                className="h-28 w-full object-cover"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeNewImage(i)}
+                                                className="absolute top-2 right-2 bg-black/70 text-white text-xs rounded-full h-6 w-6"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </section>
-
-                    {/* LOCATION */}
-                    <section className="space-y-4">
-                        <h2 className="font-semibold text-slate-900">
-                            Coordinates
-                        </h2>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <input
-                                className="input"
-                                type="number"
-                                step="any"
-                                name="latitude"
-                                value={form.latitude}
-                                onChange={handleChange}
-                                placeholder="Latitude"
-                            />
-                            <input
-                                className="input"
-                                type="number"
-                                step="any"
-                                name="longitude"
-                                value={form.longitude}
-                                onChange={handleChange}
-                                placeholder="Longitude"
-                            />
-                        </div>
-                    </section>
-
-                    {/* TIMING */}
-                    <section className="space-y-4">
-                        <h2 className="font-semibold text-slate-900">
-                            Operating Hours
-                        </h2>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <input
-                                className="input"
-                                type="time"
-                                name="opening_time"
-                                value={form.opening_time}
-                                onChange={handleChange}
-                            />
-                            <input
-                                className="input"
-                                type="time"
-                                name="closing_time"
-                                value={form.closing_time}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </section>
-
-                    {/* TOGGLE */}
-                    <label className="flex items-center gap-3 text-sm">
-                        <input
-                            type="checkbox"
-                            name="is_open"
-                            checked={form.is_open}
-                            onChange={handleChange}
-                        />
-                        Turf is open for bookings
-                    </label>
 
                     {/* ACTIONS */}
                     <div className="flex gap-3">
                         <button
                             type="submit"
                             disabled={saving}
-                            className={`flex-1 rounded-2xl py-3 text-sm font-semibold transition ${saving
-                                    ? "bg-slate-300"
-                                    : "bg-slate-900 text-white hover:bg-slate-800"
-                                }`}
+                            className="flex-1 rounded-2xl bg-slate-900 py-3 text-white"
                         >
                             {saving ? "Saving..." : "Save Changes"}
                         </button>
@@ -242,7 +274,7 @@ export default function EditTurf() {
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="rounded-2xl border px-5 py-3 text-sm font-medium hover:bg-slate-50"
+                            className="rounded-2xl border px-5 py-3"
                         >
                             Cancel
                         </button>

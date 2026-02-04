@@ -188,4 +188,8 @@ class Migration(migrations.Migration):
             model_name='turfimage',
             index=models.Index(fields=['turf'], name='turf_image_turf_idx'),
         ),
+        migrations.AddConstraint(
+            model_name='turfimage',
+            constraint=models.UniqueConstraint(condition=models.Q(('is_default', True)), fields=('turf',), name='unique_default_image_per_turf'),
+        ),
     ]

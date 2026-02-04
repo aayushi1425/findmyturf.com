@@ -35,7 +35,8 @@ export default function MyCourts() {
           c.id === courtId ? { ...c, is_open: !isOpen } : c
         )
       );
-    } catch (err) {
+    } 
+    catch (err) {
       alert("Failed to update court");
     }
   }

@@ -3,21 +3,21 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api";
 
 const createTurf = (data) =>
-    api.post("/turf/create/", data);
+  api.post("/turf/create/", data);
 
 const uploadTurfImage = (turfId, file) => {
-    const formData = new FormData();
-    formData.append("image", file); // 👈 backend expects `image`
+  const formData = new FormData();
+  formData.append("image", file); // 👈 backend expects `image`
 
-    return api.post(
-        `/turf/${turfId}/image/upload/`,
-        formData,
-        {
-            headers: {
-                "Content-Type": "multipart/form-data", // 👈 override JSON
-            },
-        }
-    );
+  return api.post(
+    `/turf/${turfId}/image/upload/`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data", // 👈 override JSON
+      },
+    }
+  );
 };
 
 
@@ -91,9 +91,9 @@ export default function AddTurf() {
       const turfId = res.data.id;
 
       if (images.length) {
-        await Promise.all(
-          images.map((img) => uploadTurfImage(turfId, img))
-        );
+        for (const img of images) {
+          await uploadTurfImage(turfId, img);
+        }
       }
 
       navigate(`/owner/turf/${turfId}/courts/add`);
@@ -215,11 +215,10 @@ export default function AddTurf() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full rounded-2xl py-3 text-sm font-semibold transition ${
-            loading
+          className={`w-full rounded-2xl py-3 text-sm font-semibold transition ${loading
               ? "bg-slate-300"
               : "bg-slate-900 text-white hover:bg-slate-800"
-          }`}
+            }`}
         >
           {loading ? "Creating Turf..." : "Create Turf"}
         </button>

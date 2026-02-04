@@ -23,7 +23,7 @@ export default function Login() {
                 password,
             });
 
-            login(res.data.access);
+            login(res.data.access , res.data.role);
 
             if (res.data.role == "OWNER"){
                 navigate("/owner/turfs");
