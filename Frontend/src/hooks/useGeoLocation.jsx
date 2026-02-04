@@ -7,32 +7,68 @@ export default function useGeoLocation() {
         lon: null,
         city: null,
         loading: true,
+        error: null,
     });
 
     useEffect(() => {
-        async function fetchLocation() {
-            try {
-                const res = await axios.get("https://ipapi.co/json/");
+        if (!navigator.geolocation) {
+            setLocation(prev => ({
+                ...prev,
+                loading: false,
+                error: "Geolocation not supported",
+            }));
+            return;
+        }
 
-                setLocation({
-                    lat: res.data.latitude,
-                    lon: res.data.longitude,
-                    city: res.data.city,
-                    loading: false,
-                });
-            } catch (err) {
-                console.error("Geo error:", err);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
 
+                try {
+                    const res = await axios.get(
+                        "https://maps.googleapis.com/maps/api/geocode/json",
+                        {
+                            params: {
+                                latlng: `${lat},${lon}`,
+                                key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+                            },
+                        }
+                    );
+
+                    const cityComponent = res.data.results[0]?.address_components.find(
+                        c => c.types.includes("locality")
+                    );
+
+                    setLocation({
+                        lat,
+                        lon,
+                        city: cityComponent?.long_name || null,
+                        loading: false,
+                        error: null,
+                    });
+                } catch (err) {
+                    console.error("Google Geocode error:", err);
+                    setLocation({
+                        lat,
+                        lon,
+                        city: null,
+                        loading: false,
+                        error: "Failed to fetch city",
+                    });
+                }
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
                 setLocation({
                     lat: null,
                     lon: null,
                     city: null,
                     loading: false,
+                    error: error.message,
                 });
             }
-        }
-
-        fetchLocation();
+        );
     }, []);
 
     return location;

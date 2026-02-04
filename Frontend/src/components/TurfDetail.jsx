@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api";
-import SlotSelector from "../components/Slotselector";
+import { toast } from "react-toastify";
+import SlotSelector from "../components/SlotSelector";
 import BookingSummary from "../components/BookingSummary";
 
 export default function TurfDetail() {
@@ -86,14 +87,21 @@ export default function TurfDetail() {
             });
 
             navigate(`/booking/${res.data.id}`);
-        } catch (err) {
+        }
+        catch (err) {
             if (err.response?.status === 401) {
                 navigate("/login");
             }
             else {
-                alert(err.response.data.error);
+                toast.error(err.response.data.error, {
+                    style: {
+                        width: "auto",
+                        whiteSpace: "pre-wrap",
+                    },
+                });
             }
-        } finally {
+        }
+        finally {
             setBookingLoading(false);
         }
     }

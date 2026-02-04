@@ -1,5 +1,7 @@
-import os , time
+import os
+import time
 import threading
+import queue
 from flask import Flask, request, jsonify
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -15,81 +17,93 @@ chrome_options.add_argument(f"user-data-dir={user_data_dir}")
 chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 chrome_options.add_argument("--start-maximized")
 chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-chrome_options.add_experimental_option('useAutomationExtension', False)
-    
+chrome_options.add_experimental_option("useAutomationExtension", False)
+
 driver = webdriver.Chrome(options=chrome_options)
 driver.set_page_load_timeout(60)
 
-def whatsapp_goto(url):
-    global driver
+message_queue = queue.Queue()
 
+def whatsapp_goto(url):
     driver.get(url)
     WebDriverWait(driver, 25).until(
-        EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div/div/div/div[3]/div/div[4]/div/div[1]/div/div[2]/div/div/div[1]/p"))
+        EC.presence_of_element_located(
+            (By.XPATH, "//div[@contenteditable='true']")
+        )
     )
-    print("WhatsApp Web loaded successfully!")
+    print("WhatsApp Web loaded")
 
 def send_message(phone_number, message):
     try:
-        whatsapp_goto(f'https://web.whatsapp.com/send?phone={phone_number}&text={message}')
-        time.sleep(2)
-        # if driver.page_source.find("Phone number shared via url is invalid.") != -1:
-        #     return False, "This number is invalid or not registered"
-        try:
-            InvalidNumber = WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div/div/div/span[2]/div/span/div/div/div/div/div/div[2]/div/button'))
-            )
+        whatsapp_goto(
+            f"https://web.whatsapp.com/send?phone={phone_number}&text={message}"
+        )
 
-            if InvalidNumber:
-                InvalidNumber.click()
-                return False, "This number is invalid or not registered"
-        except Exception:
+        time.sleep(2)
+
+        try:
+            invalid = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//div[contains(text(),'invalid')]")
+                )
+            )
+            if invalid:
+                return False, "Invalid or unregistered number"
+        except:
             pass
-        
-        
+
         WebDriverWait(driver, 25).until(
-            EC.presence_of_element_located((By.XPATH, "//button[@aria-label='Send']"))
+            EC.element_to_be_clickable(
+                (By.XPATH, "//button[@aria-label='Send']")
+            )
         ).click()
 
-        # if this xpath comes means number is invalid xpath=//*[@id="app"]/div/div/span[2]/div/span/div/div/div/div/div/div[1]
+        time.sleep(1)
+        return True, "Message sent"
 
-
-        
-        return True, "Message sent successfully!"
     except Exception as e:
-        return False, f"Error sending message: {str(e)}"
+        return False, str(e)
 
-@app.route('/send-message', methods=['POST'])
+def queue_worker():
+    while True:
+        phone_number, message = message_queue.get()
+        try:
+            success, msg = send_message(phone_number, message)
+            print(f"[QUEUE] {phone_number} → {msg}")
+        except Exception as e:
+            print(f"[QUEUE ERROR] {e}")
+        finally:
+            message_queue.task_done()
+            time.sleep(2)
+
+@app.route("/send-message", methods=["POST"])
 def api_send_message():
-    try:
-        data = request.json
-        phone_number = data.get('phone_number')
-        message = data.get('message')
-        
-        if not phone_number or not message:
-            return jsonify({
-                'status': 'error',
-                'message': 'phone_number and message are required'
-            }), 400
-        
-        success, msg = send_message(phone_number, message)
-        
+    data = request.json
+    phone_number = data.get("phone_number")
+    message = data.get("message")
+
+    if not phone_number or not message:
         return jsonify({
-            'status': 'success' if success else 'error',
-            'message': msg
-        }) , 200 if success else 500
-    
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
+            "status": "error",
+            "message": "phone_number and message are required"
+        }), 400
+
+    message_queue.put((phone_number, message))
+
+    return jsonify({
+        "status": "queued",
+        "message": "Message added to queue",
+        "queue_size": message_queue.qsize()
+    }), 202
 
 def run_flask():
-    app.run(host='0.0.0.0', port=5005)
+    app.run(host="0.0.0.0", port=5005)
 
-if __name__ == '__main__':
-    whatsapp_goto('https://web.whatsapp.com/')
+if __name__ == "__main__":
+    whatsapp_goto("https://web.whatsapp.com/")
+
+    threading.Thread(target=queue_worker, daemon=True).start()
     threading.Thread(target=run_flask, daemon=True).start()
+
     while True:
         time.sleep(1)

@@ -1,25 +1,9 @@
 version: "3.9"
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: findmyturf-postgres
-    restart: always
-    environment:
-      POSTGRES_DB: findmyturf
-      POSTGRES_USER: harshal
-      POSTGRES_PASSWORD: harshal
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   redis:
     image: redis:7
     container_name: findmyturf-redis
     restart: always
     ports:
       - "6379:6379"
-
-volumes:
-  postgres_data:

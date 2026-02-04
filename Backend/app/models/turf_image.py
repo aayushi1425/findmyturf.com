@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.db.models import Q
 from app.models.turf import Turf
 from cloudinary.models import CloudinaryField
 
@@ -14,4 +15,11 @@ class TurfImage(models.Model):
         indexes = [
             models.Index(fields=["id"], name="turf_image_id_idx"),
             models.Index(fields=["turf"], name="turf_image_turf_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["turf"],
+                condition=Q(is_default=True),
+                name="unique_default_image_per_turf",
+            )
         ]
