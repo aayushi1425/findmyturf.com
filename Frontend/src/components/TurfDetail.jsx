@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api";
-import SlotSelector from "../components/SlotSelector";
+import SlotSelector from "./SlotSelector.jsx";
 import BookingSummary from "../components/BookingSummary";
 
 export default function TurfDetail() {

@@ -1,13 +1,20 @@
-from math import radians, cos, sin, asin, sqrt
+import requests
 
-def haversine(lat1, lon1, lat2, lon2):
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+def get_lat_lng(address):
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": address,
+        "format": "json",
+        "limit": 1
+    }
+    headers = {
+        "User-Agent": "findmyturf-app"
+    }
 
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
+    response = requests.get(url, params=params, headers=headers)
+    data = response.json()
 
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * asin(sqrt(a))
-    r = 6371
+    if data:
+        return float(data[0]["lat"]), float(data[0]["lon"])
 
-    return c * r
+    return None, None

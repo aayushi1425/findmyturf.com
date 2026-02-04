@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.urls import path
 from app.views.payment import ConfirmPaymentView
 from app.views.availability import CourtAvailableSlotsView
@@ -8,7 +9,20 @@ from app.views.turf import TurfCreateView, TurfUpdateView, TurfListView, TurfDet
 from app.views.turf_image import TurfImageUploadView , SetDefaultTurfImageView , DeleteTurfImageView
 from app.views.booking import BookingCreateView , MyBookingsView , BookingDetailView , CancelBookingView
 
+
+def api_root(request):
+    return JsonResponse({
+        "message": "FindMyTurf API",
+        "endpoints": {
+            "auth": "/api/auth/login/",
+            "turfs": "/api/turf/list/",
+            "booking": "/api/booking/my/",
+        },
+    })
+
+
 urlpatterns = [
+    path("", api_root),
     path("auth/login/", LoginView.as_view()),
     path("auth/register/user/", UserRegisterView.as_view()),
     path("auth/register/owner/", OwnerRegisterView.as_view()),
