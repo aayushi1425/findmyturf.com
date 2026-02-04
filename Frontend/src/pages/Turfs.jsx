@@ -14,7 +14,8 @@ export default function Turfs() {
         city: "",
         min_price: "",
         max_price: "",
-        radius: 10,
+        radius: 25,
+        sports_type: "",
     });
 
     const [page, setPage] = useState(1);
@@ -43,6 +44,7 @@ export default function Turfs() {
                     city: filters.city || undefined,
                     min_price: filters.min_price || undefined,
                     max_price: filters.max_price || undefined,
+                    sports_type: filters.sports_type || undefined,
                     radius: filters.radius,
                     lat: location.lat || undefined,
                     lon: location.lon || undefined,

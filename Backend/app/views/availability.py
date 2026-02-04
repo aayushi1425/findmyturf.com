@@ -8,6 +8,7 @@ from app.utils.slots import generate_hour_slots
 from app.models.booking import Booking, BookingStatus
 
 class CourtAvailableSlotsView(APIView):
+
     def get(self, request, court_id):
         date_str = request.query_params.get("date")
         if not date_str:
