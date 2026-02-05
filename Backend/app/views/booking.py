@@ -24,6 +24,13 @@ class BookingCreateView(APIView):
         end = data["end_time"]
         booking_date = data["booking_date"]
 
+        # Check if court is disabled
+        if not court.is_open:
+            return Response(
+                {"error": "Court is currently disabled"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if start >= end:
             return Response(
                 {"error": "End time must be after start time"},

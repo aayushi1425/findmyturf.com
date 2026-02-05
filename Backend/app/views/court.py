@@ -29,7 +29,7 @@ class CourtCreateView(APIView):
             return Response({"error": "Turf not found or not owned by you"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
+            
         court = Court.objects.create(
             turf=turf,
             sports_type=serializer.validated_data["sports_type"],
@@ -69,10 +69,16 @@ class CourtUpdateView(APIView):
 
 class TurfCourtsView(APIView):
     def get(self, request, turf_id):
-        courts = Court.objects.filter(
-            turf_id=turf_id,
-            is_open=True,
-        )
+        if request.user.is_authenticated and request.user.user_type == "OWNER":
+            courts = Court.objects.filter(
+                turf_id=turf_id,
+            )
+        else:
+            courts = Court.objects.filter(
+                turf_id=turf_id,
+                is_open=True,
+            )
+
 
         return Response(CourtSerializer(courts, many=True).data,
             status=status.HTTP_200_OK,
@@ -90,7 +96,7 @@ class GetCourtView(APIView):
         return Response(CourtSerializer(court).data,
             status=status.HTTP_200_OK,
         )
-
+        
 class CourtDeleteView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
