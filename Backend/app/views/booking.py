@@ -4,7 +4,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from app.models.court import Court
 from app.utils.notify import notifyMessage
 from app.models.booking import Booking, BookingStatus, PaymentStatus
 from app.serializers.booking import BookingCreateSerializer , BookingSerializer, BookingDetailSerializer
@@ -39,12 +38,20 @@ class BookingCreateView(APIView):
         )
 
         has_conflict = conflicts.exists()
-        is_pending = conflicts.filter(status=BookingStatus.PENDING).exists()
-
-        if is_pending:
+        is_pending = conflicts.filter(status=BookingStatus.PENDING)
+        print(has_conflict , is_pending)
+        if is_pending.exists():
+            print("pending")
+            if is_pending.count() == 1 and is_pending.first().user == user:
+                ResponseData = BookingSerializer(conflicts.first()).data
+                ResponseData["message"] = "You already have a pending booking for this slot. we are redirecting you to the booking page"
+                return Response(
+                    ResponseData ,
+                    status=status.HTTP_200_OK,
+                )
+            
             cache.set(f"booking:{court.id}:{booking_date}:{start}:{end}", request.user.phone_no , 60*60)
-            return Response(
-                {"error": "This slot is currently in booking stage we will notify you if the slot cancels."},
+            return Response({"error": "This slot is currently in booking stage we will notify you if the slot cancels."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

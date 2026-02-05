@@ -1,7 +1,7 @@
 from django.urls import path
-from app.views.payment import ConfirmPaymentView
+from app.views.payment import ConfirmPaymentView, CreateRazorpayOrderView, RazorpayWebhookView, RazorpayVerifyView
 from app.views.availability import CourtAvailableSlotsView
-from app.views.court import CourtCreateView, TurfCourtsView , GetCourtView , CourtUpdateView , CourtDeleteView
+from app.views.court import CourtCreateView, TurfCourtsView , GetCourtView , CourtUpdateView
 from app.views.owner import OwnerTurfsView , OwnerTurfBookingsView
 from app.views.auth import UserRegisterView, OwnerRegisterView, LoginView
 from app.views.turf import TurfCreateView, TurfUpdateView, TurfListView, TurfDetailView
@@ -31,7 +31,6 @@ urlpatterns = [
 
     path("court/<uuid:court_id>/", GetCourtView.as_view()),
     path("court/<uuid:court_id>/available-slots/", CourtAvailableSlotsView.as_view()),
-    path("court/<uuid:court_id>/delete/", CourtDeleteView.as_view()),
 
     # Booking Apis
     path("booking/create/", BookingCreateView.as_view()),
@@ -41,6 +40,11 @@ urlpatterns = [
 
     # Demo Payment Confirm Api
     path("payment/confirm/<uuid:booking_id>/", ConfirmPaymentView.as_view()),
+
+    # Razorpay
+    path('payment/razorpay/create/<uuid:booking_id>/', CreateRazorpayOrderView.as_view()),
+    path('payment/razorpay/webhook/', RazorpayWebhookView.as_view()),
+    path('payment/razorpay/verify/', RazorpayVerifyView.as_view()),
 
     # Owner Apis
     path("owner/turfs/", OwnerTurfsView.as_view()),

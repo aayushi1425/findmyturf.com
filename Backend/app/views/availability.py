@@ -36,8 +36,7 @@ class CourtAvailableSlotsView(APIView):
 
         bookings = Booking.objects.filter(
             court=court,
-            booking_date=booking_date,
-            status__in=[BookingStatus.PENDING, BookingStatus.CONFIRMED],
+            booking_date=booking_date
         )
 
         available_slots = []
@@ -48,7 +47,7 @@ class CourtAvailableSlotsView(APIView):
             conflict = bookings.filter(
                 start_time__lt=slot_end,
                 end_time__gt=slot_start,
-                status__in=BookingStatus.CONFIRMED,
+                status=BookingStatus.CONFIRMED,
             ).exists()
 
             if not conflict:
