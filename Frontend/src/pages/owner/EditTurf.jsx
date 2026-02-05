@@ -46,8 +46,8 @@ export default function EditTurf() {
                 state: t.state || "",
                 latitude: t.latitude ?? "",
                 longitude: t.longitude ?? "",
-                opening_time: t.opening_time?.slice(0, 5),
-                closing_time: t.closing_time?.slice(0, 5),
+                opening_time: t.opening_time?.slice(0, 5) || "",
+                closing_time: t.closing_time?.slice(0, 5) || "",
                 is_open: t.is_open,
             });
 
@@ -69,11 +69,9 @@ export default function EditTurf() {
 
     const handleNewImageSelect = (e) => {
         const files = Array.from(e.target.files);
-
         setNewImages((prev) =>
             [...prev, ...files].slice(0, MAX_IMAGES - images.length)
         );
-
         e.target.value = "";
     };
 
@@ -178,6 +176,30 @@ export default function EditTurf() {
                                 step="any"
                                 placeholder="Longitude"
                                 value={form.longitude}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </section>
+
+                    {/* ✅ OPERATING HOURS */}
+                    <section className="space-y-4">
+                        <h2 className="font-semibold text-slate-900">
+                            Operating Hours
+                        </h2>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <input
+                                className="input"
+                                type="time"
+                                name="opening_time"
+                                value={form.opening_time}
+                                onChange={handleChange}
+                            />
+                            <input
+                                className="input"
+                                type="time"
+                                name="closing_time"
+                                value={form.closing_time}
                                 onChange={handleChange}
                             />
                         </div>
