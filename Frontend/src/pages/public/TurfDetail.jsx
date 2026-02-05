@@ -8,6 +8,7 @@ import Input from '../../components/ui/Input.jsx';
 import TurfGallery from '../../components/turf/TurfGallery.jsx';
 import SlotSelector from '../../components/booking/SlotSelector.jsx';
 import useAuth from '../../hooks/useAuth.js';
+import locationIcon from '../../assets/location_icon.png';
 
 const TurfDetail = () => {
     const { id } = useParams();
@@ -18,7 +19,7 @@ const TurfDetail = () => {
     const [courts, setCourts] = useState([]);
     const [selectedCourt, setSelectedCourt] = useState('');
     const [date, setDate] = useState('');
-    const [slot, setSlot] = useState(null);
+    const [selectedSlots, setSelectedSlots] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [info, setInfo] = useState(null);
@@ -44,13 +45,17 @@ const TurfDetail = () => {
         load();
     }, [id]);
 
+    useEffect(() => {
+        setSelectedSlots([]);
+    }, [date, selectedCourt]);
+
     const handleBook = async () => {
         if (!isAuthenticated) {
             navigate('/login', { state: { from: `/turfs/${id}` } });
             return;
         }
-        if (!selectedCourt || !date || !slot) {
-            setError('Please select court, date, and slot.');
+        if (!selectedCourt || !date || selectedSlots.length === 0) {
+            setError('Please select court, date, and slots.');
             return;
         }
 
@@ -61,14 +66,14 @@ const TurfDetail = () => {
             const payload = {
                 court: selectedCourt,
                 booking_date: date,
-                start_time: `${slot.start_time}:00`,
-                end_time: `${slot.end_time}:00`,
+                start_time: `${selectedSlots[0].start_time}:00`,
+                end_time: `${selectedSlots[selectedSlots.length - 1].end_time}:00`,
             };
             const booking = await createBooking(payload);
             setInfo('Booking created! Redirecting...');
             setTimeout(() => navigate(`/user/bookings/${booking.id}`), 1500);
         } catch (err) {
-            setError(err.response?.data?.message || 'Unable to create booking');
+            setError(err.response?.data?.error || err.response?.data?.message || 'Unable to create booking');
         } finally {
             setLoading(false);
         }
@@ -89,12 +94,9 @@ const TurfDetail = () => {
     if (error && !turf) return <p className="text-rose-600">{error}</p>;
     if (!turf) return null;
 
-
     return (
         <div className="space-y-6">
-            {/* Turf Info */}
             <div className="flex items-start justify-between gap-3">
-                {/* Left: Name + location */}
                 <div className="min-w-0">
                     <h1 className="text-xl md:text-2xl font-bold leading-tight truncate">
                         {turf.name}
@@ -104,7 +106,6 @@ const TurfDetail = () => {
                     </span>
                 </div>
 
-                {/* Right: Map button */}
                 <button
                     onClick={openInMaps}
                     disabled={!turf.latitude || !turf.longitude}
@@ -114,26 +115,18 @@ const TurfDetail = () => {
                         transition-all
                         hover:border-emerald-400 hover:text-emerald-700 hover:shadow-sm
                         active:scale-95
-                        disabled:opacity-40 disabled:cursor-not-allowed
-                    "
+                        disabled:opacity-40 disabled:cursor-not-allowed"
                     title="Open in Google Maps"
                 >
-                    <span className="text-sm">📍</span>
+                    <img src={locationIcon} alt="location" className="w-8 h-8" />
                     <span className="hidden sm:inline">See location</span>
                 </button>
             </div>
 
-
-
-            {/* MAIN LAYOUT */}
             <div className="grid gap-6 md:grid-cols-[2fr_1fr] items-start">
-
-                {/* LEFT COLUMN */}
                 <div className="space-y-6">
-                    {/* Gallery */}
                     <TurfGallery images={turf.images || []} />
 
-                    {/* Courts */}
                     <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                         <h2 className="text-lg font-semibold text-slate-900">
                             Courts
@@ -172,7 +165,6 @@ const TurfDetail = () => {
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN – BOOKING */}
                 <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:sticky md:top-4">
                     <h2 className="text-lg font-semibold text-slate-900">
                         Book a slot
@@ -189,12 +181,13 @@ const TurfDetail = () => {
                     <SlotSelector
                         courtId={selectedCourt}
                         date={date}
-                        onSelect={setSlot}
+                        selectedSlots={selectedSlots}
+                        setSelectedSlots={setSelectedSlots}
                     />
 
-                    {!slot && date && (
+                    {selectedSlots.length === 0 && date && (
                         <p className="text-sm text-slate-600">
-                            No slots available for this date.
+                            Select your slot to Continue Booking.
                         </p>
                     )}
 
@@ -207,7 +200,7 @@ const TurfDetail = () => {
 
                     <Button
                         onClick={handleBook}
-                        disabled={loading || !selectedCourt || !slot || !date}
+                        disabled={loading || !selectedCourt || selectedSlots.length === 0 || !date}
                         className="w-full"
                     >
                         {loading ? 'Processing...' : 'Book now'}

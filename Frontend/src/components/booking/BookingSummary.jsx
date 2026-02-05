@@ -1,4 +1,5 @@
 import React from 'react';
+import locationIcon from "../../assets/location_icon.png";
 
 const statusStyles = {
     PENDING: 'bg-amber-100 text-amber-700',
@@ -51,8 +52,10 @@ const BookingSummary = ({ booking }) => {
                             disabled={!booking.turf_latitude || !booking.turf_longitude}
                             className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            📍 Open Location
+                            <img src={locationIcon} alt="location" className="w-8 h-8 object-contain" />
+                            Open Location
                         </button>
+
                     </div>
                 </div>
             </div>
