@@ -1,6 +1,7 @@
 import { use, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
+import loc_icon from "../assets/location_icon.png";
 
 export default function BookingDetail() {
     const { id } = useParams();
@@ -118,11 +119,19 @@ export default function BookingDetail() {
                             </p>
                         </div>
 
-                        <button
+                        {/* <button
                             onClick={openGoogleMaps}
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-900 hover:bg-slate-50"
                         >
                             📍 Open Maps
+                        </button> */}
+
+                        <button
+                            onClick={openGoogleMaps}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-900 hover:bg-slate-50"
+                        >
+                            <img src={loc_icon} alt="Location" className="h-8 w-8" />
+                            Open Maps
                         </button>
                     </div>
                 </div>
