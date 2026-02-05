@@ -8,6 +8,8 @@ click==8.3.1
 cloudinary==1.44.1
 Django==6.0.1
 django-cloudinary-storage==0.3.0
+django-cors-headers==4.9.0
+django-redis==6.0.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 Flask==3.1.2
@@ -25,6 +27,8 @@ psycopg2-binary==2.9.11
 PyJWT==2.10.1
 PySocks==1.7.1
 python-dotenv==1.2.1
+razorpay==2.0.0
+redis==7.1.0
 requests==2.32.5
 rest-framework-simplejwt==0.0.2
 selenium==4.40.0

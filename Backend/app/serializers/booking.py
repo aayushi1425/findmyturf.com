@@ -36,6 +36,8 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     length = serializers.CharField(source="court.length", read_only=True)
     width = serializers.CharField(source="court.width", read_only=True)
     height = serializers.CharField(source="court.height", read_only=True)
+    turf_latitude = serializers.CharField(source="court.turf.latitude", read_only=True)
+    turf_longitude = serializers.CharField(source="court.turf.longitude", read_only=True)
 
     class Meta:
         model = Booking

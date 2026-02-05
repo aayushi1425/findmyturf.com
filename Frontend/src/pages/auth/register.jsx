@@ -1,133 +1,89 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import api from "../../api";
-import useAuth from "../../hooks/useAuth";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Button from '../../components/ui/Button.jsx';
+import Input from '../../components/ui/Input.jsx';
+import useAuth from '../../hooks/useAuth.js';
 
-export default function Register() {
-    const { login } = useAuth();
+const Register = () => {
+    const { register, loading, error } = useAuth();
+    const [role, setRole] = useState('user');
+    const [form, setForm] = useState({
+        name: '',
+        phone_no: '',
+        password: '',
+        business_name: '',
+    });
     const navigate = useNavigate();
 
-    const [role, setRole] = useState("user"); // user | owner
-    const [form, setForm] = useState({});
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-
-    const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
-
-    const handleRegister = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError("");
-
         try {
-            if (role === "user") {
-                await api.post("/auth/register/user/", {
-                    name: form.name,
-                    phone_no: form.phone,
-                    password: form.password,
-                });
-            } else {
-                await api.post("/auth/register/owner/", {
-                    name: form.name,
-                    phone_no: form.phone,
-                    password: form.password,
-                    business_name: form.business,
-                });
-            }
-
-            navigate("/login");
-        } catch (err) {
-            setError("Registration failed");
-        } finally {
-            setLoading(false);
+            await register(form, role);
+            navigate('/login');
+        } catch {
+            /* error shown */
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-            <div className="w-full max-w-md rounded-2xl bg-white border p-8 space-y-6">
-                <h1 className="text-xl font-bold text-center">Create Account</h1>
-
-                {/* ROLE SWITCH */}
-                <div className="flex rounded-xl border overflow-hidden">
-                    <button
-                        type="button"
-                        onClick={() => setRole("user")}
-                        className={`flex-1 py-2 text-sm font-medium ${role === "user"
-                                ? "bg-slate-900 text-white"
-                                : "bg-white"
-                            }`}
-                    >
-                        User
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setRole("owner")}
-                        className={`flex-1 py-2 text-sm font-medium ${role === "owner"
-                                ? "bg-slate-900 text-white"
-                                : "bg-white"
-                            }`}
-                    >
-                        Business
-                    </button>
-                </div>
-
-                <form onSubmit={handleRegister} className="space-y-4">
-                    {error && (
-                        <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-600">
-                            {error}
-                        </div>
-                    )}
-
-                    <input
-                        className="input"
-                        placeholder="Full name"
-                        onChange={(e) => set("name", e.target.value)}
-                        required
-                    />
-
-                    <input
-                        className="input"
-                        placeholder="Phone number"
-                        onChange={(e) => set("phone", e.target.value)}
-                        required
-                    />
-
-                    <input
-                        className="input"
-                        type="password"
-                        placeholder="Password"
-                        onChange={(e) => set("password", e.target.value)}
-                        required
-                    />
-
-                    {role === "owner" && (
-                        <input
-                            className="input"
-                            placeholder="Business name"
-                            onChange={(e) => set("business", e.target.value)}
-                            required
-                        />
-                    )}
-
-                    <button
-                        disabled={loading}
-                        className={`w-full rounded-xl py-3 text-sm font-semibold transition ${loading
-                                ? "bg-slate-300"
-                                : "bg-slate-900 text-white hover:bg-slate-800"
-                            }`}
-                    >
-                        {loading ? "Creating..." : "Create Account"}
-                    </button>
-                </form>
-
-                <p className="text-center text-sm text-slate-500">
-                    Already have an account?{" "}
-                    <Link to="/login" className="font-medium text-black">
-                        Login
-                    </Link>
-                </p>
+        <div className="mx-auto max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h1 className="text-xl font-semibold text-slate-900">Create account</h1>
+            <p className="text-sm text-slate-600">Choose a role and finish signup.</p>
+            <div className="mt-3 flex gap-2">
+                <Button
+                    variant={role === 'user' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setRole('user')}
+                >
+                    User
+                </Button>
+                <Button
+                    variant={role === 'owner' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => setRole('owner')}
+                >
+                    Owner
+                </Button>
             </div>
+            <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+                <Input
+                    label="Name"
+                    placeholder="Your name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                />
+                <Input
+                    label="Phone number"
+                    placeholder="Enter phone number"
+                    value={form.phone_no}
+                    onChange={(e) => setForm({ ...form, phone_no: e.target.value })}
+                    required
+                />
+                <Input
+                    label="Password"
+                    type="password"
+                    placeholder="Create a password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required
+                />
+                {role === 'owner' && (
+                    <Input
+                        label="Business name"
+                        placeholder="Your turf brand"
+                        value={form.business_name}
+                        onChange={(e) => setForm({ ...form, business_name: e.target.value })}
+                        required
+                    />
+                )}
+                {error && <p className="text-sm text-rose-600">{error}</p>}
+                <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Creating...' : 'Register'}
+                </Button>
+            </form>
         </div>
     );
-}
+};
+
+export default Register;

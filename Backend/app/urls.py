@@ -1,7 +1,7 @@
 from django.urls import path
 from app.views.payment import ConfirmPaymentView
 from app.views.availability import CourtAvailableSlotsView
-from app.views.court import CourtCreateView, TurfCourtsView , GetCourtView , CourtUpdateView
+from app.views.court import CourtCreateView, TurfCourtsView , GetCourtView , CourtUpdateView , CourtDeleteView
 from app.views.owner import OwnerTurfsView , OwnerTurfBookingsView
 from app.views.auth import UserRegisterView, OwnerRegisterView, LoginView
 from app.views.turf import TurfCreateView, TurfUpdateView, TurfListView, TurfDetailView
@@ -31,6 +31,7 @@ urlpatterns = [
 
     path("court/<uuid:court_id>/", GetCourtView.as_view()),
     path("court/<uuid:court_id>/available-slots/", CourtAvailableSlotsView.as_view()),
+    path("court/<uuid:court_id>/delete/", CourtDeleteView.as_view()),
 
     # Booking Apis
     path("booking/create/", BookingCreateView.as_view()),

@@ -90,3 +90,21 @@ class GetCourtView(APIView):
         return Response(CourtSerializer(court).data,
             status=status.HTTP_200_OK,
         )
+
+class CourtDeleteView(APIView):
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def delete(self, request, court_id):
+        try:
+            court = Court.objects.get(id=court_id, turf__business__user=request.user)
+        except Court.DoesNotExist:
+            return Response({"error": "Court not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        court.delete()
+
+        return Response({"message": "Court deleted successfully"},
+            status=status.HTTP_204_NO_CONTENT,
+        )
+        
