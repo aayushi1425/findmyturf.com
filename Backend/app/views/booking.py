@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import timedelta , datetime
+from django.utils import timezone
 from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from django.conf import settings
 from app.utils.notify import notifyMessage
 from app.models.booking import Booking, BookingStatus, PaymentStatus
 from app.serializers.booking import BookingCreateSerializer , BookingSerializer, BookingDetailSerializer
@@ -39,9 +41,8 @@ class BookingCreateView(APIView):
 
         has_conflict = conflicts.exists()
         is_pending = conflicts.filter(status=BookingStatus.PENDING)
-        print(has_conflict , is_pending)
+        
         if is_pending.exists():
-            print("pending")
             if is_pending.count() == 1 and is_pending.first().user == user:
                 ResponseData = BookingSerializer(conflicts.first()).data
                 ResponseData["message"] = "You already have a pending booking for this slot. we are redirecting you to the booking page"
@@ -77,8 +78,10 @@ class BookingCreateView(APIView):
             payment_status=PaymentStatus.INITIATED,
         )
 
+        ResponseData = BookingSerializer(booking).data
+        ResponseData['expiry'] = booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES)
         return Response(
-            BookingSerializer(booking).data,
+            ResponseData , 
             status=status.HTTP_201_CREATED,
         )
 
@@ -108,8 +111,16 @@ class BookingDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = BookingDetailSerializer(booking)
-        return Response(serializer.data)
+        ResponseData = BookingDetailSerializer(booking).data
+        if booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES) < timezone.now():
+            booking.status = BookingStatus.CANCELLED
+            booking.save()
+        else:
+            ResponseData['expiry'] = booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES)
+
+        ResponseData['expiry'] = booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES)
+
+        return Response(ResponseData)
 
 
 class CancelBookingView(APIView):

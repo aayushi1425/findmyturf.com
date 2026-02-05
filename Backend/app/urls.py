@@ -2,9 +2,9 @@ from django.urls import path
 from app.views.payment import ConfirmPaymentView, CreateRazorpayOrderView, RazorpayWebhookView, RazorpayVerifyView
 from app.views.availability import CourtAvailableSlotsView
 from app.views.court import CourtCreateView, TurfCourtsView , GetCourtView , CourtUpdateView
-from app.views.owner import OwnerTurfsView , OwnerTurfBookingsView
+from app.views.owner import OwnerTurfsView , OwnerTurfBookingsView , OwnerAnalyticsSummaryView , OwnerTurfAnalyticsView
 from app.views.auth import UserRegisterView, OwnerRegisterView, LoginView
-from app.views.turf import TurfCreateView, TurfUpdateView, TurfListView, TurfDetailView
+from app.views.turf import TurfCreateView , TurfUpdateView , TurfListView , TurfDetailView , MostBookedTurfView
 from app.views.turf_image import TurfImageUploadView , SetDefaultTurfImageView , DeleteTurfImageView
 from app.views.booking import BookingCreateView , MyBookingsView , BookingDetailView , CancelBookingView
 
@@ -16,6 +16,7 @@ urlpatterns = [
     # Public
     path("turf/list/", TurfListView.as_view()),
     path("turf/<uuid:turf_id>/", TurfDetailView.as_view()),
+    path("turf/most-booked/", MostBookedTurfView.as_view()),
 
     # turfs
     path("turf/create/", TurfCreateView.as_view()),
@@ -49,4 +50,6 @@ urlpatterns = [
     # Owner Apis
     path("owner/turfs/", OwnerTurfsView.as_view()),
     path("owner/turf/<uuid:turf_id>/bookings/", OwnerTurfBookingsView.as_view()),
+    path("owner/analytics/summary/", OwnerAnalyticsSummaryView.as_view()),
+    path("owner/turf/<uuid:turf_id>/analytics/", OwnerTurfAnalyticsView.as_view()),
 ]

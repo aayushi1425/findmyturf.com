@@ -4,11 +4,13 @@ from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
+PAYMENT_WINDOW_MINUTES = 20
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-z9l(xfyk5i0ruehq8d!eqk97_x^qeiixnjn23^h#mf4wwji)yu'
 DEBUG = True
+RAZORPAY_WEBHOOK_HOST = os.getenv("RAZORPAY_WEBHOOK_HOST") or ""
 ALLOWED_HOSTS = [
-    '7f514928f0a9.ngrok-free.app',
+    RAZORPAY_WEBHOOK_HOST ,
     'localhost',
     '127.0.0.1'
 ]

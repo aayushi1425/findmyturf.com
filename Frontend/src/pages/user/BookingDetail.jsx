@@ -13,6 +13,8 @@ const BookingDetail = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [info, setInfo] = useState(null);
+    const [timeLeftMs, setTimeLeftMs] = useState(null);
+    const [isExpired, setIsExpired] = useState(false);
 
     const loadBooking = async () => {
         setLoading(true);
@@ -31,6 +33,52 @@ const BookingDetail = () => {
         loadBooking();
     }, [id]);
 
+    useEffect(() => {
+        if (!booking || booking.status === 'CANCELLED' || booking.status === 'CONFIRMED') {
+            setIsExpired(false);
+            setTimeLeftMs(null);
+            return;
+        }
+
+        if (!booking.expiry) {
+            setIsExpired(false);
+            setTimeLeftMs(null);
+            return;
+        }
+
+        const expiry = new Date(booking.expiry);
+        if (Number.isNaN(expiry.getTime())) {
+            setIsExpired(false);
+            setTimeLeftMs(null);
+            return;
+        }
+
+        const update = () => {
+            const diff = expiry.getTime() - Date.now();
+            if (diff <= 0) {
+                setIsExpired(true);
+                setTimeLeftMs(0);
+                return;
+            }
+            setIsExpired(false);
+            setTimeLeftMs(diff);
+        };
+
+        update();
+        const intervalId = setInterval(update, 1000);
+        return () => clearInterval(intervalId);
+    }, [booking]);
+
+    const formatTimeLeft = (ms) => {
+        if (ms == null) return '';
+        const totalSeconds = Math.ceil(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const mm = minutes.toString().padStart(2, '0');
+        const ss = seconds.toString().padStart(2, '0');
+        return `${mm}:${ss}`;
+    };
+
     const handleCancel = async () => {
         setLoading(true);
         setError(null);
@@ -47,6 +95,10 @@ const BookingDetail = () => {
 
     const handlePayment = async () => {
         if (!booking) return;
+        if (isExpired) {
+            setError('Payment window has expired. Please create a new booking.');
+            return;
+        }
 
         setLoading(true);
         setError(null);
@@ -90,10 +142,20 @@ const BookingDetail = () => {
                     <Button variant="secondary" onClick={handleCancel} disabled={loading}>
                         Cancel booking
                     </Button>
-                    <Button onClick={handlePayment} disabled={loading}>
-                        {loading ? "Processing…" : "Pay now"}
+                    <Button onClick={handlePayment} disabled={loading || isExpired}>
+                        {loading ? "Processing…" : isExpired ? "Payment expired" : "Pay now"}
                     </Button>
                 </div>
+            )}
+            {!isExpired && timeLeftMs != null && (
+                <p className="text-sm text-slate-600">
+                    Complete payment within <span className="font-semibold">{formatTimeLeft(timeLeftMs)}</span>.
+                </p>
+            )}
+            {isExpired && booking.status !== 'CANCELLED' && booking.status !== 'CONFIRMED' && (
+                <p className="text-sm text-rose-600">
+                    Payment window has expired. Please create a new booking to proceed.
+                </p>
             )}
             {error && <p className="text-sm text-rose-600">{error}</p>}
             {info && <p className="text-sm text-emerald-700">{info}</p>}

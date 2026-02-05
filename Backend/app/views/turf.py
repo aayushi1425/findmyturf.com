@@ -1,13 +1,15 @@
-from app.models.turf import Turf
+from django.db.models import Count
 from rest_framework import status
-from app.models.court import Court
-from app.permission import IsOwner
-from app.utils.geo import haversine
-from rest_framework.views import APIView
-from app.pagination import TurfPagination
-from rest_framework.response import Response
-from app.serializers.turf import TurfSerializer
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from app.models.booking import Booking, BookingStatus
+from app.models.court import Court
+from app.models.turf import Turf
+from app.pagination import TurfPagination
+from app.permission import IsOwner
+from app.serializers.turf import TurfSerializer
+from app.utils.geo import haversine
 
 class TurfCreateView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
@@ -112,3 +114,57 @@ class TurfDetailView(APIView):
         return Response(TurfSerializer(turf).data,
             status=status.HTTP_200_OK,
         )
+
+
+class MostBookedTurfView(APIView):
+    """
+    Public endpoint for normal users to see the most booked turf.
+
+    Optional query params:
+      - city: filter by city name (case-insensitive)
+    """
+
+    def get(self, request):
+        qs = Booking.objects.filter(status=BookingStatus.CONFIRMED)
+
+        city = request.query_params.get("city")
+        if city:
+            qs = qs.filter(court__turf__city__iexact=city)
+
+        by_turf = (
+            qs.values("court__turf_id")
+            .annotate(
+                total_bookings=Count("id"),
+            )
+            .order_by("-total_bookings")
+        )
+
+        top_list = list(by_turf[:4])
+        if not top_list:
+            return Response({"detail": "No bookings found."},
+                status=status.HTTP_200_OK,
+            )
+
+        turf_ids = [row["court__turf_id"] for row in top_list]
+        turfs = Turf.objects.filter(id__in=turf_ids, is_open=True)
+        turf_map = {str(t.id): TurfSerializer(t).data for t in turfs}
+
+        results = []
+        for row in top_list:
+            tid = row["court__turf_id"]
+            turf_data = turf_map.get(str(tid))
+            if not turf_data:
+                continue
+            results.append({
+                    "turf": turf_data,
+                    "total_bookings": row["total_bookings"],
+                }
+            )
+
+        if not results:
+            return Response(
+                {"detail": "Most booked turfs are not available."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(results, status=status.HTTP_200_OK)

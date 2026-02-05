@@ -1,14 +1,15 @@
 from decimal import Decimal
-from django.conf import settings
-from app.permission import IsOwner
-import hmac , hashlib , json , razorpay
-from rest_framework.views import APIView
+import hmac, hashlib, json, razorpay
 from app.utils.notify import notifyMessage
-from rest_framework.response import Response
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from app.models.booking import Booking, BookingStatus, PaymentStatus
+from app.permission import IsOwner
 
 class ConfirmPaymentView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
@@ -150,7 +151,6 @@ class RazorpayWebhookView(APIView):
         signature = request.META.get("HTTP_X_RAZORPAY_SIGNATURE", "")
         webhook_secret = getattr(settings, "RAZORPAY_WEBHOOK_SECRET", "")
 
-        print("[Webhook] Payload:", payload)
         if webhook_secret:
             expected_signature = hmac.new(
                 webhook_secret.encode(),
@@ -167,7 +167,6 @@ class RazorpayWebhookView(APIView):
             print("[Webhook] Invalid payload:", str(e))
             return Response(status=400)
 
-        print("[Webhook] Event:", event.get("payload",))
         order_entity = event.get("payload", {}).get("order", {}).get("entity", {})
         payment_entity = event.get("payload", {}).get("payment", {}).get("entity", {})
 
