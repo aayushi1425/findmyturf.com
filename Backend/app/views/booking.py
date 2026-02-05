@@ -45,6 +45,7 @@ class BookingCreateView(APIView):
         if is_pending.exists():
             if is_pending.count() == 1 and is_pending.first().user == user:
                 ResponseData = BookingSerializer(conflicts.first()).data
+                ResponseData['expiry'] = booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES)
                 ResponseData["message"] = "You already have a pending booking for this slot. we are redirecting you to the booking page"
                 return Response(
                     ResponseData ,
@@ -106,20 +107,12 @@ class BookingDetailView(APIView):
                 user=request.user,
             )
         except Booking.DoesNotExist:
-            return Response(
-                {"error": "Booking not found"},
+            return Response({"error": "Booking not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         ResponseData = BookingDetailSerializer(booking).data
-        if booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES) < timezone.now():
-            booking.status = BookingStatus.CANCELLED
-            booking.save()
-        else:
-            ResponseData['expiry'] = booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES)
-
         ResponseData['expiry'] = booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES)
-
         return Response(ResponseData)
 
 
