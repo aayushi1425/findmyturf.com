@@ -41,7 +41,7 @@ class TurfUpdateView(APIView):
         serializer = TurfSerializer(turf, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        for attr, value in serializer.validated_data.items():  # type: ignore
+        for attr, value in serializer.validated_data.items():  
             setattr(turf, attr, value)
 
         turf.save()
@@ -58,7 +58,7 @@ class TurfListView(APIView):
 
         city = request.query_params.get("city")
         min_price = request.query_params.get("min_price")
-        max_price = request.query_params.get("max_price")
+        max_price = request.query_params.get("max_price")       
 
         if city:
             queryset = queryset.filter(city__iexact=city)
