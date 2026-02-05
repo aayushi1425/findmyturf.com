@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
-import PageLayout from "../../components/PageLayout";
-import { ListShimmerGrid, TurfCardShimmer } from "../../components/Shimmers";
+import { ListShimmerGrid, TurfCardShimmer, StatCardShimmer } from "../../components/Shimmers";
 
 export default function MyTurfs() {
   const navigate = useNavigate();
@@ -25,29 +24,55 @@ export default function MyTurfs() {
     }
   }
 
+  const totalTurfs = turfs.length;
+  const openTurfs = turfs.filter((t) => t.is_open).length;
+
   return (
-    <PageLayout>
-      <div className="min-h-screen px-6 py-10">
+      <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
         <div className="mx-auto max-w-6xl space-y-8">
 
         {/* HEADER */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              My Turfs
+              Owner dashboard
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Manage your turfs, courts and bookings
+              Overview of your turfs, courts and bookings.
             </p>
           </div>
 
           <button
             onClick={() => navigate("/owner/add-turf")}
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+            className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600"
           >
             + Add Turf
           </button>
         </div>
+
+        {/* STATS */}
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCardShimmer />
+            <StatCardShimmer />
+            <StatCardShimmer />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium text-slate-500">Total turfs</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{totalTurfs}</p>
+            </div>
+            <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium text-slate-500">Open for booking</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-600">{openTurfs}</p>
+            </div>
+            <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <p className="text-xs font-medium text-slate-500">Closed</p>
+              <p className="mt-1 text-2xl font-bold text-slate-900">{totalTurfs - openTurfs}</p>
+            </div>
+          </div>
+        )}
 
         {/* CONTENT */}
         {loading ? (
@@ -67,7 +92,7 @@ export default function MyTurfs() {
 
             <button
               onClick={() => navigate("/owner/add-turf")}
-              className="mt-6 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white"
+              className="mt-6 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-600"
             >
               Add Turf
             </button>
@@ -85,7 +110,6 @@ export default function MyTurfs() {
         )}
         </div>
       </div>
-    </PageLayout>
   );
 }
 

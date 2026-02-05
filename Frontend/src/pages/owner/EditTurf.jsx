@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api";
-import PageLayout from "../../components/PageLayout";
 
 export default function EditTurf() {
     const { turfId } = useParams();
@@ -126,8 +125,7 @@ export default function EditTurf() {
     }
 
     return (
-        <PageLayout>
-        <div className="min-h-screen px-6 py-10">
+        <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
             <div className="mx-auto max-w-3xl">
                 <form
                     onSubmit={handleSubmit}
@@ -293,6 +291,5 @@ export default function EditTurf() {
                 </form>
             </div>
         </div>
-        </PageLayout>
     );
 }

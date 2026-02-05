@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../api";
 import useAuth from "../../hooks/useAuth";
-import PageLayout from "../../components/PageLayout";
-import { TurfCardShimmer } from "../../components/Shimmers";
+import { FormShimmer, ImageBlockShimmer } from "../../components/Shimmers";
 
 export default function Register() {
     const { login } = useAuth();
@@ -56,33 +55,47 @@ export default function Register() {
     // ✅ shimmer screen
     if (pageLoading) {
         return (
-            <PageLayout>
-                <div className="min-h-screen flex items-center justify-center px-4">
-                    <div className="w-full max-w-md">
-                        <TurfCardShimmer />
+            <div className="min-h-screen bg-slate-900/90 px-4 py-12">
+                <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row">
+                    <div className="w-full lg:w-1/2">
+                        <ImageBlockShimmer />
+                    </div>
+                    <div className="w-full lg:w-1/2">
+                        <FormShimmer />
                     </div>
                 </div>
-            </PageLayout>
+            </div>
         );
     }
 
     return (
-        <PageLayout>
-            <div className="min-h-screen flex items-center justify-center px-4">
-                <div className="w-full max-w-md rounded-2xl bg-white/95 backdrop-blur border p-8 space-y-6 shadow">
-                    <h1 className="text-xl font-bold text-center">
+            <div className="min-h-screen bg-[url('https://images.pexels.com/photos/399187/pexels-photo-399187.jpeg?auto=compress&cs=tinysrgb&w=1200')] bg-cover bg-center">
+                <div className="min-h-screen bg-slate-950/70 px-4 py-12">
+                    <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row">
+                        <div className="w-full text-slate-50 lg:w-1/2">
+                            <h1 className="text-3xl font-bold">
+                                Create your FindMyTurf account
+                            </h1>
+                            <p className="mt-3 text-sm text-slate-200">
+                                Book as a player or manage multiple turfs as a business – switch
+                                roles anytime after signup.
+                            </p>
+                        </div>
+
+                        <div className="w-full max-w-md rounded-2xl bg-white/95 p-8 shadow lg:w-1/2">
+                    <h2 className="text-xl font-bold text-center text-slate-900">
                         Create Account
-                    </h1>
+                    </h2>
 
                     {/* ROLE SWITCH */}
-                    <div className="flex rounded-xl border overflow-hidden">
+                    <div className="mt-4 flex overflow-hidden rounded-xl border bg-slate-50">
                         <button
                             type="button"
                             onClick={() => setRole("user")}
                             className={`flex-1 py-2 text-sm font-medium ${
                                 role === "user"
-                                    ? "bg-slate-900 text-white"
-                                    : "bg-white"
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-transparent text-slate-700"
                             }`}
                         >
                             User
@@ -93,15 +106,15 @@ export default function Register() {
                             onClick={() => setRole("owner")}
                             className={`flex-1 py-2 text-sm font-medium ${
                                 role === "owner"
-                                    ? "bg-slate-900 text-white"
-                                    : "bg-white"
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-transparent text-slate-700"
                             }`}
                         >
                             Business
                         </button>
                     </div>
 
-                    <form onSubmit={handleRegister} className="space-y-4">
+                    <form onSubmit={handleRegister} className="mt-6 space-y-4">
                         {error && (
                             <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-600">
                                 {error}
@@ -145,8 +158,8 @@ export default function Register() {
                             disabled={loading}
                             className={`w-full rounded-xl py-3 text-sm font-semibold transition ${
                                 loading
-                                    ? "bg-slate-300"
-                                    : "bg-slate-900 text-white hover:bg-slate-800"
+                                    ? "bg-slate-300 animate-pulse"
+                                    : "bg-emerald-500 text-white hover:bg-emerald-600"
                             }`}
                         >
                             {loading ? "Creating..." : "Create Account"}
@@ -155,12 +168,13 @@ export default function Register() {
 
                     <p className="text-center text-sm text-slate-500">
                         Already have an account?{" "}
-                        <Link to="/login" className="font-medium text-black">
+                        <Link to="/login" className="font-medium text-emerald-600">
                             Login
                         </Link>
                     </p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </PageLayout>
     );
 }

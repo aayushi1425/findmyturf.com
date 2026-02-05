@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api";
-import PageLayout from "../../components/PageLayout";
 
 const SPORTS = [
   "CRICKET",
@@ -86,11 +85,11 @@ export default function EditCourt() {
   }
 
   return (
-    <PageLayout>
-    <div className="mx-auto max-w-2xl px-6 py-10">
+    <div className="min-h-screen bg-slate-50 px-4 py-10">
+    <div className="mx-auto max-w-2xl">
       <form
         onSubmit={handleSubmit}
-        className="rounded-3xl bg-white p-8 shadow-sm space-y-8"
+        className="space-y-8 rounded-3xl bg-white p-8 shadow-sm"
       >
         {/* HEADER */}
         <header>
@@ -201,8 +200,8 @@ export default function EditCourt() {
             disabled={saving}
             className={`flex-1 rounded-xl py-3 text-sm font-semibold transition ${
               saving
-                ? "bg-slate-300"
-                : "bg-slate-900 text-white hover:bg-slate-800"
+                ? "bg-slate-300 animate-pulse"
+                : "bg-emerald-500 text-white hover:bg-emerald-600"
             }`}
           >
             {saving ? "Saving..." : "Save Changes"}
@@ -210,6 +209,6 @@ export default function EditCourt() {
         </div>
       </form>
     </div>
-    </PageLayout>
+    </div>
   );
 }

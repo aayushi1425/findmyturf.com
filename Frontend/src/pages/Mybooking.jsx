@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import PageLayout from "../components/PageLayout";
 import { ListShimmerGrid, CourtCardShimmer } from "../components/Shimmers";
 
 export default function MyBookings() {
@@ -34,12 +33,11 @@ export default function MyBookings() {
     };
 
     return (
-        <PageLayout>
-            <div className="min-h-screen px-6 py-10">
+            <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
                 <div className="mx-auto max-w-5xl space-y-6">
 
                     {/* HEADER */}
-                    <div className="rounded-3xl bg-white/95 backdrop-blur p-6 shadow-lg">
+                    <div className="rounded-3xl bg-white p-6 shadow-sm">
                         <h1 className="text-2xl font-bold text-slate-900">
                             My Bookings
                         </h1>
@@ -72,14 +70,15 @@ export default function MyBookings() {
                                 <div
                                     key={booking.id}
                                     onClick={() => navigate(`/booking/${booking.id}`)}
-                                    className="cursor-pointer rounded-2xl bg-white/95 backdrop-blur p-5 shadow-sm transition hover:shadow-md"
+                                    className="cursor-pointer rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                                 >
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                                         {/* LEFT */}
                                         <div>
                                             <h3 className="font-semibold text-slate-900">
-                                                Turf Booking
+                                                {/* Prefer real turf name when available */}
+                                                {booking.turf_name || "Turf booking"}
                                             </h3>
 
                                             <p className="mt-1 text-sm text-slate-600">
@@ -109,6 +108,5 @@ export default function MyBookings() {
                     )}
                 </div>
             </div>
-        </PageLayout>
     );
 }

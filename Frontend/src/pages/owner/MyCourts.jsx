@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api";
-import PageLayout from "../../components/PageLayout";
 import { CourtCardShimmer, ListShimmerGrid } from "../../components/Shimmers";
 
 export default function MyCourts() {
@@ -51,8 +50,7 @@ export default function MyCourts() {
   }
 
   return (
-    <PageLayout>
-      <div className="mx-auto max-w-6xl px-6 py-10 space-y-6">
+      <div className="mx-auto max-w-6xl px-4 py-10 space-y-6 sm:px-6">
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <div>
@@ -161,6 +159,5 @@ export default function MyCourts() {
           </div>
         )}
       </div>
-    </PageLayout>
   );
 }

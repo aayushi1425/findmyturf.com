@@ -2,8 +2,7 @@ import api from "../../api";
 import { useState, useEffect } from "react";
 import useAuth from "../../hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
-import PageLayout from "../../components/PageLayout";
-import { CourtCardShimmer } from "../../components/Shimmers";
+import { FormShimmer, ImageBlockShimmer } from "../../components/Shimmers";
 
 export default function Login() {
   const { login } = useAuth();
@@ -48,25 +47,39 @@ export default function Login() {
 
   if (pageLoading) {
     return (
-      <PageLayout>
-        <div className="min-h-screen flex items-center justify-center px-4">
-          <div className="w-full max-w-md">
-            <CourtCardShimmer />
+      <div className="min-h-screen bg-slate-900/90 px-4 py-12">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row">
+          <div className="w-full lg:w-1/2">
+            <ImageBlockShimmer />
+          </div>
+          <div className="w-full lg:w-1/2">
+            <FormShimmer />
           </div>
         </div>
-      </PageLayout>
+      </div>
     );
   }
 
   return (
-    <PageLayout>
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white/95 backdrop-blur border p-8 space-y-6 shadow-sm">
-          <h1 className="text-xl font-bold text-center">
-            FindMyTurf
-          </h1>
+    <div className="min-h-screen bg-[url('https://images.pexels.com/photos/399187/pexels-photo-399187.jpeg?auto=compress&cs=tinysrgb&w=1200')] bg-cover bg-center">
+      <div className="min-h-screen bg-slate-950/70 px-4 py-12">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row">
+          <div className="w-full text-slate-50 lg:w-1/2">
+            <h1 className="text-3xl font-bold">
+              Welcome back to FindMyTurf
+            </h1>
+            <p className="mt-3 text-sm text-slate-200">
+              Sign in to manage your bookings or turfs with a fast, sports-first
+              dashboard.
+            </p>
+          </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <div className="w-full max-w-md rounded-2xl bg-white/95 p-8 shadow-sm lg:w-1/2">
+            <h2 className="mb-4 text-xl font-bold text-center text-slate-900">
+              Login
+            </h2>
+
+            <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-600">
                 {error}
@@ -94,22 +107,23 @@ export default function Login() {
               disabled={loading}
               className={`w-full rounded-xl py-3 text-sm font-semibold transition ${
                 loading
-                  ? "bg-slate-300"
-                  : "bg-slate-900 text-white hover:bg-slate-800"
+                  ? "bg-slate-300 animate-pulse"
+                  : "bg-emerald-500 text-white hover:bg-emerald-600"
               }`}
             >
               {loading ? "Signing in..." : "Login"}
             </button>
-          </form>
+            </form>
 
-          <p className="text-center text-sm text-slate-500">
-            Don’t have an account?{" "}
-            <Link to="/register" className="font-medium text-black">
-              Register
-            </Link>
-          </p>
+            <p className="mt-4 text-center text-sm text-slate-500">
+              Don’t have an account?{" "}
+              <Link to="/register" className="font-medium text-emerald-600">
+                Register
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
-    </PageLayout>
+    </div>
   );
 }

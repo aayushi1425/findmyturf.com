@@ -4,7 +4,6 @@ import api from "../api";
 import { toast } from "react-toastify";
 import SlotSelector from "../components/SlotSelector";
 import BookingSummary from "../components/BookingSummary";
-import PageLayout from "./PageLayout";
 
 export default function TurfDetail() {
     const { id } = useParams();
@@ -24,6 +23,9 @@ export default function TurfDetail() {
     const [loading, setLoading] = useState(true);
     const [slotLoading, setSlotLoading] = useState(false);
     const [bookingLoading, setBookingLoading] = useState(false);
+
+    // Local-only rating UI (no backend mutation yet)
+    const [rating, setRating] = useState(0);
 
     useEffect(() => {
         fetchTurf();
@@ -60,6 +62,7 @@ export default function TurfDetail() {
     }
 
     async function fetchTurf() {
+        setLoading(true);
         try {
             const turfRes = await api.get(`/turf/${id}/`);
             setTurf(turfRes.data);
@@ -123,7 +126,8 @@ export default function TurfDetail() {
         }
     }
 
-    if (!turf) {
+    // Only show "not found" once we are sure loading is finished
+    if (!loading && !turf) {
         return (
             <div className="flex min-h-screen items-center justify-center text-red-500">
                 Turf not found
@@ -134,8 +138,7 @@ export default function TurfDetail() {
     const openNow = isTurfOpenNow(turf);
 
     return (
-        <PageLayout>
-            <div className="min-h-screen px-6 py-10">
+            <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
                 <div className="mx-auto max-w-6xl grid grid-cols-1 gap-8 lg:grid-cols-3">
 
                     {/* LEFT */}
@@ -278,17 +281,42 @@ export default function TurfDetail() {
                                 onClick={handleBooking}
                                 className={`mt-2 w-full rounded-xl py-3 text-sm font-semibold transition
                                     ${selectedSlots.length > 0
-                                        ? "bg-slate-900 text-white hover:bg-slate-800"
+                                        ? "bg-emerald-500 text-white hover:bg-emerald-600"
                                         : "cursor-not-allowed bg-slate-200 text-slate-500"
                                     }`}
                             >
                                 {bookingLoading ? "Booking..." : "Confirm Booking"}
                             </button>
+
+                            {/* Rating UI – frontend only */}
+                            <div className="mt-4 border-t pt-4">
+                                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                                    Rate this turf
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setRating(star)}
+                                            className="text-xl"
+                                        >
+                                            <span className={star <= rating ? "text-emerald-500" : "text-slate-300"}>
+                                                ★
+                                            </span>
+                                        </button>
+                                    ))}
+                                    <span className="text-xs text-slate-500">
+                                        {rating ? `${rating}/5` : "Tap to rate"}
+                                    </span>
+                                </div>
+                                {/* TODO: Backend support required
+                                    Frontend ready to submit rating via API */}
+                            </div>
                         </div>
                     </div>
 
                 </div>
             </div>
-        </PageLayout>
     );
 }

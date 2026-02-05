@@ -15,6 +15,10 @@ import AddTurf from "./pages/owner/AddTurf";
 import EditTurf from "./pages/owner/EditTurf";
 import OwnerTurfBookings from "./pages/owner/OwnerTurfBookings";
 import Header from "./components/Header";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import PopularTurfs from "./pages/PopularTurfs";
+import SportsCategories from "./pages/SportsCategories";
 
 export default function App() {
     return (
@@ -28,6 +32,12 @@ export default function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="turfs" element={<TurfPage />} />
                 <Route path="/turf/:id" element={<TurfDetail />} />
+
+                {/* Static / marketing pages */}
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/popular-turfs" element={<PopularTurfs />} />
+                <Route path="/sports" element={<SportsCategories />} />
 
                 <Route path="/booking/:id" element={<BookingDetail />} />
                 <Route path="/my-bookings" element={<MyBookings />} />

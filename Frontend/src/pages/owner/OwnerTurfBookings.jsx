@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../../api";
-import PageLayout from "../../components/PageLayout";
 
 export default function OwnerTurfBookings() {
     const { turfId } = useParams();
@@ -40,8 +39,7 @@ export default function OwnerTurfBookings() {
     };
 
     return (
-        <PageLayout>
-        <div className="min-h-screen px-6 py-10">
+        <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
             <div className="mx-auto max-w-6xl space-y-6">
 
                 {/* HEADER */}
@@ -56,8 +54,15 @@ export default function OwnerTurfBookings() {
 
                 {/* CONTENT */}
                 {loading ? (
-                    <div className="py-24 text-center text-slate-500">
-                        Loading bookings...
+                    <div className="space-y-4">
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            <div className="h-20 rounded-2xl bg-white shadow-sm animate-pulse" />
+                            <div className="h-20 rounded-2xl bg-white shadow-sm animate-pulse" />
+                            <div className="h-20 rounded-2xl bg-white shadow-sm animate-pulse" />
+                        </div>
+                        <div className="rounded-3xl bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+                            Loading bookings...
+                        </div>
                     </div>
                 ) : bookings.length === 0 ? (
                     <div className="rounded-3xl bg-white p-10 text-center shadow">
@@ -88,7 +93,6 @@ export default function OwnerTurfBookings() {
                                         key={b.id}
                                         className="border-t hover:bg-slate-50"
                                     >
-                                        {/* CUSTOMER */}
                                         <td className="px-4 py-3">
                                             <p className="font-medium text-slate-900">
                                                 {b.customer_name || "—"}
@@ -98,36 +102,27 @@ export default function OwnerTurfBookings() {
                                             </p>
                                         </td>
 
-                                        {/* DATE */}
                                         <td className="px-4 py-3 text-slate-700">
                                             {b.booking_date}
                                         </td>
 
-                                        {/* TIME */}
                                         <td className="px-4 py-3 text-slate-700">
-                                            {b.start_time.slice(0, 5)} –{" "}
-                                            {b.end_time.slice(0, 5)}
+                                            {b.start_time?.slice(0, 5)} –{" "}
+                                            {b.end_time?.slice(0, 5)}
                                         </td>
 
-                                        {/* AMOUNT */}
                                         <td className="px-4 py-3 font-semibold text-slate-900">
                                             ₹{b.amount}
                                         </td>
 
-                                        {/* STATUS */}
                                         <td className="px-4 py-3">
-                                            <span
-                                                className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyle[b.status]}`}
-                                            >
+                                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyle[b.status]}`}>
                                                 {b.status}
                                             </span>
                                         </td>
 
-                                        {/* PAYMENT */}
                                         <td className="px-4 py-3">
-                                            <span
-                                                className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStyle[b.payment_status]}`}
-                                            >
+                                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStyle[b.payment_status]}`}>
                                                 {b.payment_status}
                                             </span>
                                         </td>
@@ -139,6 +134,5 @@ export default function OwnerTurfBookings() {
                 )}
             </div>
         </div>
-        </PageLayout>
     );
 }

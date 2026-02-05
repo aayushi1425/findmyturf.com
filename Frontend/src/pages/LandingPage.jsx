@@ -17,7 +17,7 @@ export default function LandingPage() {
     return (
       <PageLayout>
         <div className="min-h-screen flex flex-col">
-          <div className="flex-1 px-6 py-20">
+          <div className="flex-1 px-6 py-16">
             <ListShimmerGrid count={3} renderItem={() => <TurfCardShimmer />} />
           </div>
         </div>
