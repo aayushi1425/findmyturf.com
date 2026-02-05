@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
 import { ListShimmerGrid, TurfCardShimmer, StatCardShimmer } from "../../components/Shimmers";
-
+import Button from "../../components/ui/Button";
+import { Link } from "react-router-dom";
 export default function MyTurfs() {
   const navigate = useNavigate();
   const [turfs, setTurfs] = useState([]);
@@ -187,6 +188,14 @@ function TurfCard({ turf, navigate }) {
           >
             Edit Turf
           </button>
+
+         <Link
+  to={`/owner/feedbacks?tid=${turf.id}`}
+  className="col-span-2 inline-flex items-center justify-center rounded-xl border px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+>
+  Feedback
+</Link>
+
         </div>
       </div>
     </div>
