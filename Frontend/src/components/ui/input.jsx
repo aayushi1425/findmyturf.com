@@ -1,20 +1,29 @@
-import React from 'react';
-import clsx from 'clsx';
-
-const Input = React.forwardRef(({ className = '', label, as: Component = 'input', ...props }, ref) => (
-  <label className="flex flex-col gap-1 text-sm text-slate-700">
-    {label && <span className="font-medium">{label}</span>}
-    <Component
-      ref={ref}
-      className={clsx(
-        'w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100',
-        className
+export default function Input({ label, className = "", ...props }) {
+  return (
+    <div>
+      {label && (
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          {label}
+        </label>
       )}
-      {...props}
-    />
-  </label>
-));
 
-Input.displayName = 'Input';
-
-export default Input;
+      <input
+        {...props}
+        className={`
+          w-full
+          rounded-xl
+          border border-slate-300
+          px-4 py-3
+          text-sm
+          bg-white
+          placeholder-slate-400
+          focus:outline-none
+          focus:ring-2
+          focus:ring-slate-900
+          focus:border-slate-900
+          ${className}
+        `}
+      />
+    </div>
+  );
+}

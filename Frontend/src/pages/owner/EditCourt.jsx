@@ -1,109 +1,214 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { getCourt, updateCourt } from '../../api/court.api.js';
-import Input from '../../components/ui/Input.jsx';
-import Button from '../../components/ui/Button.jsx';
-import Spinner from '../../components/ui/Spinner.jsx';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../api";
 
-const EditCourt = () => {
-    const { id } = useParams();
-    const [form, setForm] = useState(null);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+const SPORTS = [
+  "CRICKET",
+  "FOOTBALL",
+  "BADMINTON",
+  "TENNIS",
+  "VOLLEYBALL",
+  "PICKLEBALL",
+  "GOLF",
+];
 
-    useEffect(() => {
-        const load = async () => {
-            setLoading(true);
-            try {
-                const data = await getCourt(id);
-                setForm({
-                    turf: data.turf,
-                    sports_type: data.sports_type,
-                    price: data.price,
-                    length: data.length,
-                    width: data.width,
-                    height: data.height,
-                    is_open: data.is_open,
-                });
-            } catch {
-                setError('Failed to load court');
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, [id]);
+export default function EditCourt() {
+  const { courtId } = useParams();
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-        try {
-            await updateCourt(id, form);
-            navigate('/owner/courts');
-        } catch {
-            setError('Failed to update court');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-    if (!form) {
-        return (
-            <div className="mx-auto max-w-xl flex justify-center items-center h-48">
-                <Spinner className="w-8 h-8 text-gray-400" />
-            </div>
-        );
+  const [form, setForm] = useState({
+    sports_type: "",
+    price: "",
+    length: "",
+    width: "",
+    height: "",
+    is_open: true,
+  });
+
+  useEffect(() => {
+    fetchCourt();
+  }, []);
+
+  async function fetchCourt() {
+    try {
+      const res = await api.get(`/court/${courtId}/`);
+      setForm({
+        sports_type: res.data.sports_type,
+        price: res.data.price,
+        length: res.data.length,
+        width: res.data.width,
+        height: res.data.height,
+        is_open: res.data.is_open,
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load court details");
+    } finally {
+      setLoading(false);
     }
+  }
 
-    return (
-        <div className="mx-auto max-w-xl space-y-4">
-            <h1 className="text-2xl font-semibold text-slate-900">Edit Court</h1>
-            <form
-                onSubmit={handleSubmit}
-                className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-all duration-150 hover:shadow-md"
-            >
-                <Input label="Sports type" value={form.sports_type} disabled className="bg-gray-100" />
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
-                <Input
-                    label="Price"
-                    type="number"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    required
-                />
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <Input
-                        label="Length"
-                        value={form.length}
-                        onChange={(e) => setForm({ ...form, length: e.target.value })}
-                    />
-                    <Input
-                        label="Width"
-                        value={form.width}
-                        onChange={(e) => setForm({ ...form, width: e.target.value })}
-                    />
-                    <Input
-                        label="Height"
-                        value={form.height}
-                        onChange={(e) => setForm({ ...form, height: e.target.value })}
-                    />
-                </div>
+    try {
+      await api.patch(`/court/${courtId}/update/`, {
+        sports_type: form.sports_type,
+        price: Number(form.price),
+        length: Number(form.length),
+        width: Number(form.width),
+        height: Number(form.height),
+        is_open: form.is_open,
+      });
 
-                {error && <p className="text-sm text-rose-600">{error}</p>}
+      navigate(-1);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to update court");
+    } finally {
+      setSaving(false);
+    }
+  }
 
-                <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full"
-                >
-                    {loading ? 'Saving...' : 'Update Court'}
-                </Button>
-            </form>
+  return (
+    <div className="min-h-screen bg-slate-50 px-4 py-10">
+    <div className="mx-auto max-w-2xl">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-8 rounded-3xl bg-white p-8 shadow-sm"
+      >
+        {/* HEADER */}
+        <header>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Edit Court
+          </h1>
+          <p className="text-sm text-slate-500">
+            Update court details and availability
+          </p>
+        </header>
+
+        {error && (
+          <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        {/* SPORT */}
+        <section className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">
+            Sport Type
+          </label>
+
+          <select
+            name="sports_type"
+            value={form.sports_type}
+            onChange={handleChange}
+            className="input"
+          >
+            {SPORTS.map((sport) => (
+              <option key={sport} value={sport}>
+                {sport}
+              </option>
+            ))}
+          </select>
+        </section>
+
+        {/* PRICE */}
+        <section className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">
+            Price per Hour (₹)
+          </label>
+
+          <input
+            type="number"
+            name="price"
+            required
+            className="input"
+            onChange={handleChange}
+            value={form.price}
+          />
+        </section>
+
+        {/* DIMENSIONS */}
+        <section className="space-y-3">
+          <h2 className="font-semibold text-slate-900">
+            Court Dimensions (meters)
+          </h2>
+
+          <div className="grid grid-cols-3 gap-4">
+            <input
+              type="number"
+              name="length"
+              className="input"
+              onChange={handleChange}
+              value={form.length}
+            />
+            <input
+              type="number"
+              name="width"
+              className="input"
+              onChange={handleChange}
+              value={form.width}
+            />
+            <input
+              type="number"
+              name="height"
+              className="input"
+              onChange={handleChange}
+              value={form.height}
+            />
+          </div>
+        </section>
+
+        {/* STATUS */}
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="is_open"
+            checked={form.is_open}
+            onChange={handleChange}
+          />
+          Court is available for booking
+        </label>
+
+        {/* ACTIONS */}
+        <div className="flex gap-4 pt-4">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium hover:border-slate-900"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className={`flex-1 rounded-xl py-3 text-sm font-semibold transition ${
+              saving
+                ? "bg-slate-300 animate-pulse"
+                : "bg-emerald-500 text-white hover:bg-emerald-600"
+            }`}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
         </div>
-    );
-};
-
-export default EditCourt;
+      </form>
+    </div>
+    </div>
+  );
+}

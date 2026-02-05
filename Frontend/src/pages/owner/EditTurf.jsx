@@ -1,142 +1,295 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { getTurf, updateTurf } from '../../api/turf.api.js';
-import Input from '../../components/ui/Input.jsx';
-import Button from '../../components/ui/Button.jsx';
-import Spinner from '../../components/ui/Spinner.jsx';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import api from "../../api";
 
-const EditTurf = () => {
-    const { id } = useParams();
-    const [form, setForm] = useState(null);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
+export default function EditTurf() {
+    const { turfId } = useParams();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const loadTurf = async () => {
-            setLoading(true);
-            try {
-                const data = await getTurf(id);
-                setForm({
-                    name: data.name || '',
-                    description: data.description || '',
-                    location: data.location || '',
-                    city: data.city || '',
-                    state: data.state || '',
-                    latitude: data.latitude || '',
-                    longitude: data.longitude || '',
-                    opening_time: data.opening_time || '06:00:00',
-                    closing_time: data.closing_time || '23:00:00',
-                });
-            } catch {
-                setError('Failed to load turf');
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadTurf();
-    }, [id]);
+    const [form, setForm] = useState({
+        name: "",
+        description: "",
+        location: "",
+        city: "",
+        state: "",
+        latitude: "",
+        longitude: "",
+        opening_time: "",
+        closing_time: "",
+        is_open: true,
+    });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
+    const [images, setImages] = useState([]);
+    const [newImages, setNewImages] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
+    const MAX_IMAGES = 5;
+
+    useEffect(() => {
+        fetchTurf();
+    }, []);
+
+    async function fetchTurf() {
         try {
-            await updateTurf(id, form);
-            navigate('/owner/turfs');
+            const res = await api.get(`/turf/${turfId}/`);
+            const t = res.data;
+
+            setForm({
+                name: t.name || "",
+                description: t.description || "",
+                location: t.location || "",
+                city: t.city || "",
+                state: t.state || "",
+                latitude: t.latitude ?? "",
+                longitude: t.longitude ?? "",
+                opening_time: t.opening_time?.slice(0, 5) || "",
+                closing_time: t.closing_time?.slice(0, 5) || "",
+                is_open: t.is_open,
+            });
+
+            setImages(t.images || []);
         } catch {
-            setError('Failed to update turf');
+            setError("Failed to load turf details");
         } finally {
             setLoading(false);
         }
+    }
+
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setForm((prev) => ({
+            ...prev,
+            [name]: type === "checkbox" ? checked : value,
+        }));
     };
 
-    if (!form) {
-        return (
-            <div className="mx-auto max-w-2xl flex justify-center items-center h-48">
-                <Spinner className="w-8 h-8 text-gray-400" />
-            </div>
+    const handleNewImageSelect = (e) => {
+        const files = Array.from(e.target.files);
+        setNewImages((prev) =>
+            [...prev, ...files].slice(0, MAX_IMAGES - images.length)
+        );
+        e.target.value = "";
+    };
+
+    const removeNewImage = (index) => {
+        setNewImages((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        await api.post(
+            `/turf/${turfId}/image/upload/`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } }
         );
     }
 
+    async function setDefaultImage(imageId) {
+        await api.post(`/turf/image/${imageId}/set-default/`);
+        fetchTurf();
+    }
+
+    async function deleteImage(imageId) {
+        if (!window.confirm("Delete this image?")) return;
+        await api.delete(`/turf/image/${imageId}/delete/`);
+        fetchTurf();
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setSaving(true);
+        setError("");
+
+        try {
+            await api.patch(`/turf/${turfId}/update/`, {
+                ...form,
+                latitude: form.latitude ? parseFloat(form.latitude) : null,
+                longitude: form.longitude ? parseFloat(form.longitude) : null,
+            });
+
+            for (const img of newImages) {
+                await uploadImage(img);
+            }
+
+            navigate("/owner/turfs");
+        } catch {
+            setError("Failed to update turf");
+        } finally {
+            setSaving(false);
+        }
+    }
+
     return (
-        <div className="mx-auto max-w-2xl space-y-4">
-            <h1 className="text-2xl font-semibold text-slate-900">Edit Turf</h1>
+        <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
+            <div className="mx-auto max-w-3xl">
+                <form
+                    onSubmit={handleSubmit}
+                    className="space-y-8 rounded-3xl bg-white p-8 shadow-sm"
+                >
+                    <h1 className="text-2xl font-bold">Edit Turf</h1>
 
-            <form
-                onSubmit={handleSubmit}
-                className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-all duration-150 hover:shadow-md"
-            >
-                <Input
-                    label="Name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    required
-                />
-                <Input
-                    label="Description"
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    required
-                />
-                <Input
-                    label="Location"
-                    value={form.location}
-                    onChange={(e) => setForm({ ...form, location: e.target.value })}
-                    required
-                />
+                    {error && (
+                        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+                            {error}
+                        </div>
+                    )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                        label="City"
-                        value={form.city}
-                        onChange={(e) => setForm({ ...form, city: e.target.value })}
-                        required
-                    />
-                    <Input
-                        label="State"
-                        value={form.state}
-                        onChange={(e) => setForm({ ...form, state: e.target.value })}
-                        required
-                    />
-                </div>
+                    {/* BASIC INFO */}
+                    <section className="space-y-4">
+                        <input className="input" name="name" value={form.name} onChange={handleChange} />
+                        <textarea className="input" name="description" value={form.description} onChange={handleChange} />
+                        <input className="input" name="location" value={form.location} onChange={handleChange} />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                        label="Latitude"
-                        value={form.latitude}
-                        onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-                    />
-                    <Input
-                        label="Longitude"
-                        value={form.longitude}
-                        onChange={(e) => setForm({ ...form, longitude: e.target.value })}
-                    />
-                </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <input className="input" name="city" value={form.city} onChange={handleChange} />
+                            <input className="input" name="state" value={form.state} onChange={handleChange} />
+                        </div>
+                    </section>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                        label="Opening time"
-                        type="time"
-                        value={form.opening_time}
-                        onChange={(e) => setForm({ ...form, opening_time: e.target.value })}
-                    />
-                    <Input
-                        label="Closing time"
-                        type="time"
-                        value={form.closing_time}
-                        onChange={(e) => setForm({ ...form, closing_time: e.target.value })}
-                    />
-                </div>
+                    {/* LOCATION COORDINATES */}
+                    <section className="space-y-4">
+                        <h2 className="font-semibold text-slate-900">
+                            Location Coordinates
+                        </h2>
 
-                {error && <p className="text-sm text-rose-600">{error}</p>}
+                        <div className="grid grid-cols-2 gap-4">
+                            <input
+                                className="input"
+                                name="latitude"
+                                type="number"
+                                step="any"
+                                placeholder="Latitude"
+                                value={form.latitude}
+                                onChange={handleChange}
+                            />
+                            <input
+                                className="input"
+                                name="longitude"
+                                type="number"
+                                step="any"
+                                placeholder="Longitude"
+                                value={form.longitude}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </section>
 
-                <Button type="submit" disabled={loading} className="w-full">
-                    {loading ? 'Saving...' : 'Update Turf'}
-                </Button>
-            </form>
+                    {/* ✅ OPERATING HOURS */}
+                    <section className="space-y-4">
+                        <h2 className="font-semibold text-slate-900">
+                            Operating Hours
+                        </h2>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <input
+                                className="input"
+                                type="time"
+                                name="opening_time"
+                                value={form.opening_time}
+                                onChange={handleChange}
+                            />
+                            <input
+                                className="input"
+                                type="time"
+                                name="closing_time"
+                                value={form.closing_time}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </section>
+
+                    {/* IMAGES */}
+                    <section className="space-y-4">
+                        <h2 className="font-semibold">Turf Images</h2>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            {images.map((img) => (
+                                <div key={img.id} className="relative border rounded-xl overflow-hidden">
+                                    <img src={img.image_url} className="h-28 w-full object-cover" />
+
+                                    {img.is_default && (
+                                        <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                                            Default
+                                        </span>
+                                    )}
+
+                                    <div className="absolute bottom-2 left-2 right-2 flex gap-1">
+                                        {!img.is_default && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setDefaultImage(img.id)}
+                                                className="flex-1 bg-black/70 text-white text-xs py-1 rounded"
+                                            >
+                                                Make Default
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteImage(img.id)}
+                                            className="bg-red-600 text-white text-xs px-2 rounded"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {images.length < MAX_IMAGES && (
+                            <>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleNewImageSelect}
+                                    className="block w-full text-sm"
+                                />
+
+                                <div className="grid grid-cols-3 gap-4">
+                                    {newImages.map((file, i) => (
+                                        <div key={i} className="relative border rounded-xl overflow-hidden">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                className="h-28 w-full object-cover"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeNewImage(i)}
+                                                className="absolute top-2 right-2 bg-black/70 text-white text-xs rounded-full h-6 w-6"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </section>
+
+                    <div className="flex gap-3">
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="flex-1 rounded-2xl bg-slate-900 py-3 text-white"
+                        >
+                            {saving ? "Saving..." : "Save Changes"}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => navigate(-1)}
+                            className="rounded-2xl border px-5 py-3"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
-};
-
-export default EditTurf;
+}

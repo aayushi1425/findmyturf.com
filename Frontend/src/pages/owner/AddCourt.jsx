@@ -1,139 +1,184 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { listOwnerTurfs } from '../../api/turf.api.js';
-import { createCourt } from '../../api/court.api.js';
-import Input from '../../components/ui/Input.jsx';
-import Button from '../../components/ui/Button.jsx';
-import Spinner from '../../components/ui/Spinner.jsx';
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../api";
 
-const AddCourt = () => {
-    const [searchParams] = useSearchParams();
-    const [turfs, setTurfs] = useState([]);
-    const [form, setForm] = useState({
-        turf: searchParams.get('tid') || '',
-        sports_type: 'FOOTBALL',
-        price: '',
-        length: '',
-        width: '',
-        height: '',
-        is_open: true,
-    });
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+const SPORTS = [
+  "CRICKET",
+  "FOOTBALL",
+  "BADMINTON",
+  "TENNIS",
+  "VOLLEYBALL",
+  "PICKLEBALL",
+  "GOLF",
+];
 
-    useEffect(() => {
-        const loadTurfs = async () => {
-            const data = await listOwnerTurfs();
-            setTurfs(data);
-            if (!form.turf && data.length) setForm((prev) => ({ ...prev, turf: data[0].id }));
-        };
-        loadTurfs();
-    }, []);
+export default function AddCourt() {
+  const { turfId } = useParams();
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-        try {
-            await createCourt(form);
-            navigate('/owner/courts');
-        } catch {
-            setError('Failed to create court');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    return (
-        <div className="mx-auto max-w-xl px-4">
-            <h1 className="text-2xl font-semibold text-slate-900 mb-4">Add Court</h1>
+  const [form, setForm] = useState({
+    sports_type: "CRICKET",
+    price: "",
+    length: "",
+    width: "",
+    height: "",
+    is_open: true,
+  });
 
-            <form
-                onSubmit={handleSubmit}
-                className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-lg"
-            >
-                {/* Turf select */}
-                <Input
-                    label="Turf"
-                    as="select"
-                    value={form.turf}
-                    onChange={(e) => setForm({ ...form, turf: e.target.value })}
-                >
-                    {turfs.map((t) => (
-                        <option key={t.id} value={t.id}>
-                            {t.name}
-                        </option>
-                    ))}
-                </Input>
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
-                {/* Sports type select */}
-                <Input
-                    label="Sports type"
-                    as="select"
-                    value={form.sports_type}
-                    onChange={(e) => setForm({ ...form, sports_type: e.target.value })}
-                >
-                    {['FOOTBALL', 'CRICKET', 'TENNIS', 'BADMINTON', 'VOLLEYBALL', 'PICKLEBALL', 'GOLF'].map(
-                        (sport) => (
-                            <option key={sport} value={sport}>
-                                {sport}
-                            </option>
-                        )
-                    )}
-                </Input>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-                {/* Price */}
-                <Input
-                    label="Price"
-                    type="number"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    required
-                />
+    try {
+      await api.post("/court/create/", {
+        turf: turfId,
+        sports_type: form.sports_type,
+        price: Number(form.price),
+        length: Number(form.length),
+        width: Number(form.width),
+        height: Number(form.height),
+        is_open: form.is_open,
+      });
 
-                {/* Dimensions */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <Input
-                        label="Length"
-                        value={form.length}
-                        onChange={(e) => setForm({ ...form, length: e.target.value })}
-                    />
-                    <Input
-                        label="Width"
-                        value={form.width}
-                        onChange={(e) => setForm({ ...form, width: e.target.value })}
-                    />
-                    <Input
-                        label="Height"
-                        value={form.height}
-                        onChange={(e) => setForm({ ...form, height: e.target.value })}
-                    />
-                </div>
+      navigate(`/owner/turf/${turfId}/courts`);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to create court");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                {/* Is open toggle */}
-                <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm text-slate-700">
-                        <input
-                            type="checkbox"
-                            checked={form.is_open}
-                            onChange={(e) => setForm({ ...form, is_open: e.target.checked })}
-                            className="h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        Open for booking
-                    </label>
-                </div>
+  return (
+    <div className="min-h-screen bg-slate-50 px-4 py-10">
+    <div className="mx-auto max-w-2xl">
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-3xl bg-white p-8 shadow-sm space-y-8"
+      >
+        {/* HEADER */}
+        <header>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Add Court
+          </h1>
+          <p className="text-sm text-slate-500">
+            Add a playable court under this turf
+          </p>
+        </header>
 
-                {error && <p className="text-sm text-rose-600">{error}</p>}
+        {error && (
+          <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
-                {/* Submit button */}
-                <Button type="submit" className="w-full flex justify-center items-center gap-2" disabled={loading}>
-                    {loading && <Spinner className="w-4 h-4 text-white" />}
-                    {loading ? 'Saving...' : 'Create Court'}
-                </Button>
-            </form>
-        </div>
-    );
-};
+        {/* SPORT */}
+        <section className="space-y-3">
+          <label className="text-sm font-medium text-slate-700">
+            Sport Type
+          </label>
 
-export default AddCourt;
+          <select
+            name="sports_type"
+            value={form.sports_type}
+            onChange={handleChange}
+            className="input"
+          >
+            {SPORTS.map((sport) => (
+              <option key={sport} value={sport}>
+                {sport}
+              </option>
+            ))}
+          </select>
+        </section>
+
+        {/* PRICE */}
+        <section className="space-y-3">
+          <label className="text-sm font-medium text-slate-700">
+            Price per Hour (₹)
+          </label>
+
+          <input
+            type="number"
+            name="price"
+            required
+            placeholder="e.g. 1200"
+            className="input"
+            onChange={handleChange}
+          />
+        </section>
+
+        {/* DIMENSIONS */}
+        <section className="space-y-3">
+          <h2 className="font-semibold text-slate-900">
+            Court Dimensions (meters)
+          </h2>
+
+          <div className="grid grid-cols-3 gap-4">
+            <input
+              type="number"
+              name="length"
+              placeholder="Length"
+              className="input"
+              required
+              onChange={handleChange}
+            />
+            <input
+              type="number"
+              name="width"
+              placeholder="Width"
+              className="input"
+              required
+              onChange={handleChange}
+            />
+            <input
+              type="number"
+              name="height"
+              placeholder="Height"
+              className="input"
+              required
+              onChange={handleChange}
+            />
+          </div>
+        </section>
+
+        {/* STATUS */}
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="is_open"
+            checked={form.is_open}
+            onChange={handleChange}
+          />
+          Court is available for booking
+        </label>
+
+        {/* ACTION */}
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full rounded-2xl py-3 text-sm font-semibold transition ${
+            loading
+              ? "bg-slate-300"
+              : "bg-slate-900 text-white hover:bg-slate-800"
+          }`}
+        >
+          {loading ? "Creating Court..." : "Create Court"}
+        </button>
+      </form>
+    </div>
+    </div>
+  );
+}
