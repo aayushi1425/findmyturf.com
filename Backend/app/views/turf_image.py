@@ -25,7 +25,11 @@ class TurfImageUploadView(APIView):
 
         request.data["turf"] = turf_id
         serializer = TurfImageSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        if not isinstance(serializer.validated_data, dict) or "image" not in serializer.validated_data:
+            return Response({"error": "Image field is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
             is_first_image = not TurfImage.objects.filter(turf=turf).exists()

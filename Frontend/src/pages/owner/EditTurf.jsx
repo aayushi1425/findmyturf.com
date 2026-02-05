@@ -20,8 +20,8 @@ export default function EditTurf() {
         is_open: true,
     });
 
-    const [images, setImages] = useState([]);        // existing images
-    const [newImages, setNewImages] = useState([]);  // newly selected images
+    const [images, setImages] = useState([]);
+    const [newImages, setNewImages] = useState([]);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -44,16 +44,15 @@ export default function EditTurf() {
                 location: t.location || "",
                 city: t.city || "",
                 state: t.state || "",
-                latitude: t.latitude || "",
-                longitude: t.longitude || "",
+                latitude: t.latitude ?? "",
+                longitude: t.longitude ?? "",
                 opening_time: t.opening_time?.slice(0, 5),
                 closing_time: t.closing_time?.slice(0, 5),
                 is_open: t.is_open,
             });
 
             setImages(t.images || []);
-        } catch (err) {
-            console.error(err);
+        } catch {
             setError("Failed to load turf details");
         } finally {
             setLoading(false);
@@ -93,29 +92,16 @@ export default function EditTurf() {
         );
     }
 
-    /* ---------------- IMAGE ACTIONS ---------------- */
-
     async function setDefaultImage(imageId) {
-        try {
-            await api.post(`/turf/image/${imageId}/set-default/`);
-            fetchTurf();
-        } catch {
-            alert("Failed to set default image");
-        }
+        await api.post(`/turf/image/${imageId}/set-default/`);
+        fetchTurf();
     }
 
     async function deleteImage(imageId) {
         if (!window.confirm("Delete this image?")) return;
-
-        try {
-            await api.delete(`/turf/image/${imageId}/delete/`);
-            fetchTurf();
-        } catch {
-            alert("Failed to delete image");
-        }
+        await api.delete(`/turf/image/${imageId}/delete/`);
+        fetchTurf();
     }
-
-    /* ---------------- SUBMIT ---------------- */
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -129,14 +115,12 @@ export default function EditTurf() {
                 longitude: form.longitude ? parseFloat(form.longitude) : null,
             });
 
-            // upload new images sequentially
             for (const img of newImages) {
                 await uploadImage(img);
             }
 
             navigate("/owner/turfs");
-        } catch (err) {
-            console.error(err);
+        } catch {
             setError("Failed to update turf");
         } finally {
             setSaving(false);
@@ -160,14 +144,44 @@ export default function EditTurf() {
                     )}
 
                     {/* BASIC INFO */}
-                    <input className="input" name="name" value={form.name} onChange={handleChange} />
-                    <textarea className="input" name="description" value={form.description} onChange={handleChange} />
-                    <input className="input" name="location" value={form.location} onChange={handleChange} />
+                    <section className="space-y-4">
+                        <input className="input" name="name" value={form.name} onChange={handleChange} />
+                        <textarea className="input" name="description" value={form.description} onChange={handleChange} />
+                        <input className="input" name="location" value={form.location} onChange={handleChange} />
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <input className="input" name="city" value={form.city} onChange={handleChange} />
-                        <input className="input" name="state" value={form.state} onChange={handleChange} />
-                    </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <input className="input" name="city" value={form.city} onChange={handleChange} />
+                            <input className="input" name="state" value={form.state} onChange={handleChange} />
+                        </div>
+                    </section>
+
+                    {/* LOCATION COORDINATES */}
+                    <section className="space-y-4">
+                        <h2 className="font-semibold text-slate-900">
+                            Location Coordinates
+                        </h2>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <input
+                                className="input"
+                                name="latitude"
+                                type="number"
+                                step="any"
+                                placeholder="Latitude"
+                                value={form.latitude}
+                                onChange={handleChange}
+                            />
+                            <input
+                                className="input"
+                                name="longitude"
+                                type="number"
+                                step="any"
+                                placeholder="Longitude"
+                                value={form.longitude}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </section>
 
                     {/* IMAGES */}
                     <section className="space-y-4">
@@ -208,31 +222,13 @@ export default function EditTurf() {
 
                         {images.length < MAX_IMAGES && (
                             <>
-                                <label className="block">
-                                    <span className="mb-2 block text-sm font-medium text-slate-700">
-                                        Upload Images
-                                    </span>
-
-                                    <div className="relative flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 transition hover:border-slate-900 hover:bg-slate-100">
-                                        <div className="text-center">
-                                            <p className="text-sm font-medium text-slate-700">
-                                                Click to upload or drag & drop
-                                            </p>
-                                            <p className="mt-1 text-xs text-slate-500">
-                                                PNG, JPG up to 5MB (max 5 images)
-                                            </p>
-                                        </div>
-
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={handleNewImageSelect}
-                                            className="absolute inset-0 cursor-pointer opacity-0"
-                                        />
-                                    </div>
-                                </label>
-
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    onChange={handleNewImageSelect}
+                                    className="block w-full text-sm"
+                                />
 
                                 <div className="grid grid-cols-3 gap-4">
                                     {newImages.map((file, i) => (
@@ -255,7 +251,6 @@ export default function EditTurf() {
                         )}
                     </section>
 
-                    {/* ACTIONS */}
                     <div className="flex gap-3">
                         <button
                             type="submit"

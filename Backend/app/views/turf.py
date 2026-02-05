@@ -21,12 +21,15 @@ class TurfCreateView(APIView):
         serializer.is_valid(raise_exception=True)
 
         turf = Turf.objects.create(
-            business=request.user.business, **serializer.validated_data
+            business=request.user.business,
+            **serializer.validated_data
         )
 
-        return Response(TurfSerializer(turf).data,
-            status=status.HTTP_201_CREATED,
+        return Response(
+            TurfSerializer(turf).data,
+            status=status.HTTP_201_CREATED
         )
+
 
 class TurfUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
@@ -42,7 +45,7 @@ class TurfUpdateView(APIView):
         serializer = TurfSerializer(turf, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        for attr, value in serializer.validated_data.items():
+        for attr, value in serializer.validated_data.items():  # type: ignore
             setattr(turf, attr, value)
 
         turf.save()

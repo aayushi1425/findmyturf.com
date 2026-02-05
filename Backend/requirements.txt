@@ -58,8 +58,6 @@ PySocks==1.7.1
 pystyle==2.9
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
-pytz==2025.2
-redis==7.1.0
 requests==2.32.5
 rest-framework-simplejwt==0.0.2
 selenium==4.40.0
