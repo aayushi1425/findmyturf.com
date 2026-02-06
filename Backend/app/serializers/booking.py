@@ -2,6 +2,7 @@ from rest_framework import serializers
 from app.models.booking import Booking
 
 class BookingSerializer(serializers.ModelSerializer):
+    turf_name = serializers.CharField(source="court.turf.name", read_only=True)
     class Meta:
         model = Booking
         fields = "__all__"

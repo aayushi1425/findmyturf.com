@@ -1,4 +1,5 @@
 from django.db.models import Count
+from django.db.models import Avg
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,7 +11,7 @@ from app.pagination import TurfPagination
 from app.permission import IsOwner
 from app.serializers.turf import TurfSerializer
 from app.utils.geo import haversine
-
+from app.models.feedback import Feedback
 class TurfCreateView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
@@ -88,7 +89,7 @@ class TurfListView(APIView):
 
             for turf in queryset:
                 distance = haversine(lat, lon, turf.latitude, turf.longitude)
-
+        
                 if distance <= radius:
                     data = TurfSerializer(turf).data
                     data["distance_km"] = round(distance, 2)
@@ -99,6 +100,11 @@ class TurfListView(APIView):
         else:
             results = TurfSerializer(queryset, many=True).data
 
+        for result in results:
+            average_rating = Feedback.objects.filter(turf_id=result["id"]).aggregate(Avg('rating'))
+            if average_rating['rating__avg']:
+                result['average_rating'] = average_rating['rating__avg']
+    
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(results, request)
 

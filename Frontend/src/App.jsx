@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import TurfDetail from "./pages/SingleTurf";
 import TurfPage from "./pages/Turfs";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
+import Login from "./pages/auth/login";
+import Register from "./pages/auth/register";
 import LandingPage from "./pages/LandingPage";
 import { ToastContainer } from 'react-toastify';
 import BookingDetail from "./pages/BookingDetail";
@@ -21,41 +21,6 @@ import PopularTurfs from "./pages/PopularTurfs";
 import SportsCategories from "./pages/SportsCategories";
 import OwnerFeedbacks from "./pages/owner/OwnFeedbacks";
 
-const ProtectedRoute = ({ roles }) => {
-  const { isAuthenticated, role } = useAuth();
-  const location = useLocation();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-  if (roles && !roles.includes(role)) {
-    return <Navigate to="/" replace />;
-  }
-  return <Outlet />;
-};
-
-const Shell = () => (
-  <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-    <Header />
-
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
-      <Outlet />
-    </main>
-
-    <Footer />
-
-    {/* ADD THIS */}
-    <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        theme="colored"
-    />
-  </div>
-);
-
 export default function App() {
     return (
         <div>
@@ -70,7 +35,7 @@ export default function App() {
                 <Route path="/turf/:id" element={<TurfDetail />} />
 
                 {/* Static / marketing pages */}
-                <Route path="/about" element={<About />} />
+                <Route path="/about" element={<About />}  />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/popular-turfs" element={<PopularTurfs />} />
                 <Route path="/sports" element={<SportsCategories />} />

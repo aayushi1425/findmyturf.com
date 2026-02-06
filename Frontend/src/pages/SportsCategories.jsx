@@ -42,12 +42,6 @@ const categories = [
     icon: "🏐",
   },
   {
-    name: "Hockey",
-    description: "Synthetic turf and practice zones",
-    key: "HOCKEY",
-    icon: "🏑",
-  },
-  {
     name: "Table Tennis",
     description: "Indoor tables with flexible slots",
     key: "TABLE_TENNIS",
@@ -57,42 +51,48 @@ const categories = [
 
 export default function SportsCategories() {
   return (
-    <div className="min-h-screen bg-[url('https://images.pexels.com/photos/2570139/pexels-photo-2570139.jpeg?auto=compress&cs=tinysrgb&w=1600')] bg-fixed bg-cover bg-center bg-no-repeat">
-      <div className="min-h-screen bg-slate-950/60 px-4 py-10 sm:px-6">
-        <div className="mx-auto max-w-6xl space-y-8">
-          <div className="space-y-2 text-center text-white">
-            <h1 className="text-3xl font-bold">Sports categories</h1>
-            <p className="text-sm text-slate-200">
-              Browse turfs by the sport you love. Filters on Explore page are
-              already wired to these categories.
+    <div className="relative inset-0 overflow-hidden w-full">
+      {/* BACKGROUND IMAGE */}
+      <img
+        src="https://images.pexels.com/photos/2570139/pexels-photo-2570139.jpeg?auto=compress&cs=tinysrgb&w=1600"
+        alt="Sports turf"
+        className="absolute inset-0 h-full w-full object-cover "
+      />
+
+      {/* OVERLAY */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/70 to-slate-950/80" />
+
+      {/* CONTENT */}
+      <div className="relative z-10 flex h-full items-center px-4 sm:px-6 pt-30 pb-31">
+        <div className="mx-auto w-full max-w-6xl space-y-8">
+          {/* HEADER */}
+          <div className="space-y-2 text-center">
+            <h1 className="text-3xl font-semibold text-white">
+              Choose your sport
+            </h1>
+            <p className="text-sm text-slate-300">
+              Find the perfect turf for your next game
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* GRID */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((cat) => (
               <div
                 key={cat.key}
-                className="flex flex-col justify-between rounded-lg bg-white/80 p-6 shadow-sm transition duration-300 hover:scale-105"
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-6 text-center backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:bg-white/20"
               >
-                <div className="space-y-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-xl text-emerald-700">
-                    {cat.icon}
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-900">
-                      {cat.name}
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {cat.description}
-                    </p>
-                  </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-3xl">
+                  {cat.icon}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-                  <span>Filter: {cat.key}</span>
-                  {/* TODO: Backend support required for category-specific landing pages
-                      Frontend ready – use existing /turf/list/ filters. */}
-                </div>
+                <h2 className="text-sm font-semibold text-white">
+                  {cat.name}
+                </h2>
+
+                <p className="text-xs text-slate-300 line-clamp-2">
+                  {cat.description}
+                </p>
               </div>
             ))}
           </div>

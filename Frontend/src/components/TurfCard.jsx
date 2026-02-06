@@ -41,7 +41,7 @@ export default function TurfCard({ turf }) {
         turf.rating ??
         turf.avg_rating ??
         turf.average_rating ??
-        4.5; // fallback mock for now
+        0
     const ratingText = rating ? Number(rating).toFixed(1) : null;
 
     return (

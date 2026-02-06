@@ -1,40 +1,3 @@
-// import { useEffect, useState } from "react";
-// import {api} from "../../api";
-
-// function OwnerFeedbacks() {
-//     const [feedbacks, setFeedbacks] = useState([]);
-
-//     useEffect(() => {
-//         const load = async () => {
-//             const { data } = await api.get("/owner/feedbacks/");
-//             setFeedbacks(data);
-//         };
-//         load();
-//     }, []);
-
-//     return (
-//         <div className="p-6 space-y-4">
-//             <h1 className="text-2xl font-semibold">Customer Feedback</h1>
-
-//             {feedbacks.map((fb) => (
-//                 <div key={fb.id} className="border rounded-lg p-4 bg-white">
-//                     <div className="flex justify-between">
-//                         <h2 className="font-semibold">{fb.turf_name}</h2>
-//                         <span className="text-amber-500">
-//                             {"★".repeat(fb.rating)}
-//                         </span>
-//                     </div>
-//                     <p className="text-gray-600 mt-2">{fb.message}</p>
-//                 </div>
-//             ))}
-//         </div>
-//     );
-// }
-
-// export default OwnerFeedbacks;
-
-
-
 import { useEffect, useState } from "react";
 import  api  from "../../api";
 
@@ -94,8 +57,8 @@ function OwnerFeedbacks() {
                             </h2>
 
                             <span className="text-amber-400 text-lg">
-                                {"★".repeat(fb.rating)}
-                                {"☆".repeat(5 - fb.rating)}
+                                {"★".repeat(fb.average_rating)}
+                                {"☆".repeat(5 - fb.average_rating)}
                             </span>
                         </div>
 

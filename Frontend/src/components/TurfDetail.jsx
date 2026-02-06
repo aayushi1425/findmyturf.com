@@ -233,9 +233,9 @@ export default function TurfDetail() {
                     {/* RIGHT */}
                     <div className="lg:sticky lg:top-8 h-fit">
                         <div className="rounded-lg bg-white/10 p-5 shadow-xl backdrop-blur-lg border border-white/20 space-y-5">
-                            <h2 className="text-lg font-semibold text-white">Book a Court</h2>
+                            <h2 className="text-lg font-semibold text-black">Book a Court</h2>
 
-                            {!openNow && (
+                            {!openNow && !loading && (
                                 <p className="text-sm text-red-600">
                                     Turf is currently closed for bookings
                                 </p>
@@ -243,7 +243,7 @@ export default function TurfDetail() {
 
                             {/* COURTS */}
                             <div className="space-y-2">
-                                <p className="text-sm font-medium text-slate-200">
+                                <p className="text-sm font-medium text-black">
                                     Select Court
                                 </p>
 
@@ -326,31 +326,6 @@ export default function TurfDetail() {
                                 {bookingLoading ? "Booking..." : "Confirm Booking"}
                             </button>
 
-                            {/* Rating UI – frontend only */}
-                            <div className="mt-4 border-t border-white/20 pt-4">
-                                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-200">
-                                    Rate this turf
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                            key={star}
-                                            type="button"
-                                            onClick={() => setRating(star)}
-                                            className="text-xl"
-                                        >
-                                            <span className={star <= rating ? "text-emerald-500" : "text-slate-300"}>
-                                                ★
-                                            </span>
-                                        </button>
-                                    ))}
-                                    <span className="text-xs text-slate-500">
-                                        {rating ? `${rating}/5` : "Tap to rate"}
-                                    </span>
-                                </div>
-                                {/* TODO: Backend support required
-                                    Frontend ready to submit rating via API */}
-                            </div>
                         </div>
                     </div>
 
