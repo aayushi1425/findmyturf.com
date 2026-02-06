@@ -9,7 +9,8 @@ import useDebouncedValue from "../hooks/useDebouncedValue";
 
 export default function Turfs() {
   const location = useGeoLocation();
-
+  const [mostBooked, setMostBooked] = useState([]);
+  const [mostBookedLoading, setMostBookedLoading] = useState(true);
   const [turfs, setTurfs] = useState([]);
   const [filters, setFilters] = useState({
     city: "",
@@ -33,6 +34,22 @@ export default function Turfs() {
   const debouncedRadius = useDebouncedValue(filters.radius);
   const debouncedSports = useDebouncedValue(filters.sports_type);
   const debouncedSearch = useDebouncedValue(filters.search);
+
+  useEffect(() => {
+    const fetchMostBooked = async () => {
+      try {
+        const res = await api.get("/turf/most-booked/");
+        setMostBooked(res.data || []);
+      } catch (err) {
+        console.error("Failed to load most booked turfs");
+      } finally {
+        setMostBookedLoading(false);
+      }
+    };
+
+    fetchMostBooked();
+  }, []);
+
 
   // 🔁 Reset page when filters or location change
   useEffect(() => {
@@ -181,139 +198,90 @@ export default function Turfs() {
 
       {/* LIST + sections on light background */}
       <div className="px-4 pb-12 pt-6 sm:px-6">
-      <div className="mx-auto max-w-6xl space-y-8">
-        {loading ? (
-          <ListShimmerGrid
-            count={6}
-            gapClassName="gap-7"
-            renderItem={(index) => <TurfCardShimmer key={index} />}
-          />
-        ) : turfs.length === 0 && error ? (
-          // Full error fallback only when there is NO data yet
-          <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-white/80 py-14 text-center shadow-sm">
-            <p className="text-sm font-medium text-red-600">
-              We couldn&apos;t load turfs right now.
-            </p>
-            <p className="text-xs text-slate-500">
-              Please check your connection and try again.
-            </p>
-            <button
-              type="button"
-              onClick={refetch}
-              className="mt-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600"
-            >
-              Retry loading turfs
-            </button>
-          </div>
-        ) : turfs.length === 0 ? (
-          // Confirmed empty state: only after successful fetch with no results
-          <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-            <h3 className="mb-2 text-lg font-semibold">No turfs found</h3>
-            <p className="text-sm">Try changing filters or location.</p>
-          </div>
-        ) : (
-          <>
-            {/* If we have some data but latest fetch failed, show a soft banner instead of hiding results */}
-            {error && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                Some turfs may be out of date due to a network issue. Showing
-                the last loaded list.{" "}
-                <button
-                  type="button"
-                  onClick={refetch}
-                  className="font-semibold underline underline-offset-2"
-                >
-                  Retry
-                </button>
+        <div className="mx-auto max-w-6xl space-y-8">
+          {loading ? (
+            <ListShimmerGrid
+              count={6}
+              gapClassName="gap-7"
+              renderItem={(index) => <TurfCardShimmer key={index} />}
+            />
+          ) : turfs.length === 0 && error ? (
+            // Full error fallback only when there is NO data yet
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-white/80 py-14 text-center shadow-sm">
+              <p className="text-sm font-medium text-red-600">
+                We couldn&apos;t load turfs right now.
+              </p>
+              <p className="text-xs text-slate-500">
+                Please check your connection and try again.
+              </p>
+              <button
+                type="button"
+                onClick={refetch}
+                className="mt-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-600"
+              >
+                Retry loading turfs
+              </button>
+            </div>
+          ) : turfs.length === 0 ? (
+            // Confirmed empty state: only after successful fetch with no results
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <h3 className="mb-2 text-lg font-semibold">No turfs found</h3>
+              <p className="text-sm">Try changing filters or location.</p>
+            </div>
+          ) : (
+            <>
+              {/* If we have some data but latest fetch failed, show a soft banner instead of hiding results */}
+              {error && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                  Some turfs may be out of date due to a network issue. Showing
+                  the last loaded list.{" "}
+                  <button
+                    type="button"
+                    onClick={refetch}
+                    className="font-semibold underline underline-offset-2"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {/* GRID */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {turfs.map((turf) => (
+                  <TurfCard key={turf.id} turf={turf} />
+                ))}
               </div>
-            )}
 
-            {/* GRID */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {turfs.map((turf) => (
-                <TurfCard key={turf.id} turf={turf} />
-              ))}
-            </div>
+              {/* PAGINATION */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-4">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100 disabled:opacity-40"
+                  >
+                    ← Prev
+                  </button>
 
-            {/* PAGINATION */}
-            {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-4">
-                <button
-                  disabled={page === 1}
-                  onClick={() => setPage((p) => p - 1)}
-                  className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100 disabled:opacity-40"
-                >
-                  ← Prev
-                </button>
+                  <span className="text-sm text-slate-600">
+                    Page <b>{page}</b> of <b>{totalPages}</b>
+                  </span>
 
-                <span className="text-sm text-slate-600">
-                  Page <b>{page}</b> of <b>{totalPages}</b>
-                </span>
+                  <button
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100 disabled:opacity-40"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
-                <button
-                  disabled={page === totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                  className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100 disabled:opacity-40"
-                >
-                  Next →
-                </button>
-              </div>
-            )}
-          </>
-        )}
+          
 
-        {/* Popular & most visited sections – UI only for now */}
-        <section className="mt-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Popular turfs
-            </h2>
-            <span className="text-xs text-slate-500">
-              Based on ratings and activity
-            </span>
-          </div>
-          {/* TODO: Backend support required for popular turfs ranking
-              Frontend ready – wire to analytics / popularity API and reuse TurfCard */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="h-32 rounded-lg bg-linear-to-tr from-emerald-500/10 to-emerald-500/5 border border-emerald-100 flex items-center justify-center text-xs text-emerald-700 transition duration-300 hover:scale-105">
-              Popular turfs will appear here.
-            </div>
-            <div className="h-32 rounded-lg bg-white/80 shadow-sm border border-slate-100 flex items-center justify-center text-xs text-slate-500 transition duration-300 hover:scale-105">
-              Hooked to same list API – filter by rating once backend is ready.
-            </div>
-            <div className="h-32 rounded-lg bg-white/80 shadow-sm border border-slate-100 flex items-center justify-center text-xs text-slate-500 transition duration-300 hover:scale-105">
-              Design only, safe for DB.
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-8 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Most visited this week
-            </h2>
-            <span className="text-xs text-slate-500">
-              UI-ready for future visit analytics
-            </span>
-          </div>
-          {/* TODO: Backend support required for visit / booking stats
-              Frontend ready – attach to stats endpoint in future. */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div className="h-24 rounded-lg bg-white/80 shadow-sm border border-slate-100 flex items-center justify-center text-xs text-slate-500 transition duration-300 hover:scale-105">
-              Turf visit stats placeholder
-            </div>
-            <div className="h-24 rounded-lg bg-white/80 shadow-sm border border-slate-100 flex items-center justify-center text-xs text-slate-500 transition duration-300 hover:scale-105">
-              Will show bookings count
-            </div>
-            <div className="h-24 rounded-lg bg-white/80 shadow-sm border border-slate-100 flex items-center justify-center text-xs text-slate-500 transition duration-300 hover:scale-105">
-              Safe UI-only section
-            </div>
-            <div className="h-24 rounded-lg bg-white/80 shadow-sm border border-slate-100 flex items-center justify-center text-xs text-slate-500 transition duration-300 hover:scale-105">
-              No schema or API changes
-            </div>
-          </div>
-        </section>
-      </div>
+        </div>
       </div>
     </div>
   );

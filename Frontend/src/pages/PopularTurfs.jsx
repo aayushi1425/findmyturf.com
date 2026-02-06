@@ -1,42 +1,53 @@
+import { useEffect, useState } from "react";
+import api from "../api";
 import TurfCard from "../components/TurfCard";
 import { TurfCardShimmer, ListShimmerGrid } from "../components/Shimmers";
 
-// UI-only page that can later be wired to a "popular turfs" API.
-// For now it simply reuses the main listing grid styles.
 export default function PopularTurfs() {
-  const isLoading = false; // TODO: Backend support required. Frontend ready.
+  const [turfs, setTurfs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPopular = async () => {
+      try {
+        const res = await api.get("/turf/most-booked/");
+        setTurfs(res.data || []);
+      } catch (err) {
+        console.error("Failed to load popular turfs");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPopular();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Popular turfs
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Most visited and highly rated venues across the platform.
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Popular turfs
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Most booked venues across the platform.
+          </p>
         </div>
 
-        {isLoading ? (
+        {loading ? (
           <ListShimmerGrid
             count={6}
             gapClassName="gap-7"
-            renderItem={(index) => <TurfCardShimmer key={index} />}
+            renderItem={(i) => <TurfCardShimmer key={i} />}
           />
         ) : (
-          <div className="rounded-lg bg-white/80 p-10 text-center text-sm text-slate-500 shadow-sm transition duration-300 hover:scale-105">
-            {/* Placeholder until a dedicated backend endpoint is available */}
-            <p>
-              Popular turfs will appear here once analytics and ranking APIs are
-              enabled.
-            </p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {turfs.map((item) => (
+              <TurfCard key={item.turf.id} turf={item.turf} />
+            ))}
           </div>
         )}
       </div>
     </div>
   );
 }
-

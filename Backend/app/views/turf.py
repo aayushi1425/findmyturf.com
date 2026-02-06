@@ -59,6 +59,9 @@ class TurfListView(APIView):
         min_price = request.query_params.get("min_price")
         max_price = request.query_params.get("max_price")
 
+        search = request.query_params.get("search")
+        if search:
+            queryset = queryset.filter(name__icontains=search)
         if city:
             queryset = queryset.filter(city__iexact=city)
 

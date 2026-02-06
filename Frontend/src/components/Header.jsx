@@ -58,12 +58,7 @@ export default function Header() {
         <div className="hidden items-center gap-3 md:flex">
           {!token && (
             <>
-              <button
-                onClick={() => navigate("/turfs")}
-                className="text-sm font-medium text-slate-700 hover:text-slate-900"
-              >
-                Book Turf
-              </button>
+              
 
               <button
                 onClick={() => navigate("/login")}

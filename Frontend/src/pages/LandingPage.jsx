@@ -188,6 +188,33 @@ export default function LandingPage() {
           </div>
         </div>
       )}
+      {/* <section className="mt-24 rounded-3xl border border-slate-200 bg-slate-50/50 px-6 py-14 sm:px-10">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-slate-900">How it works</h2>
+                <p className="mt-2 text-slate-600">Three steps to your next game.</p>
+            </div>
+            <div className="mx-auto grid max-w-4xl gap-10 sm:grid-cols-3">
+                {[
+                    { step: '1', icon: HiLocationMarker, label: 'Choose your city', text: 'Browse turfs near you or filter by sport and price.' },
+                    { step: '2', icon: HiCalendar, label: 'Pick a slot', text: 'View live availability and select date and time.' },
+                    { step: '3', icon: HiCheckCircle, label: 'Pay & play', text: 'Confirm with secure payment and get instant booking details.' },
+                ].map((item) => (
+                    <div key={item.step} className="relative flex flex-col items-center text-center">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-slate-200 text-emerald-600 shadow-sm">
+                            <item.icon className="w-7 h-7" />
+                        </div>
+                        <div className="mt-4 text-sm font-semibold text-emerald-600">Step {item.step}</div>
+                        <h3 className="mt-1 text-lg font-semibold text-slate-900">{item.label}</h3>
+                        <p className="mt-2 text-sm text-slate-600">{item.text}</p>
+                        {item.step !== '3' && (
+                            <div className="absolute left-[calc(50%+2rem)] top-7 hidden w-full sm:block">
+                                <div className="h-0.5 w-full bg-slate-200" />
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </section> */}
 
       <Footer />
     </PageLayout>

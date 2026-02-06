@@ -74,17 +74,17 @@ export default function Footer() {
                 Frontend ready to link to legal pages. */}
             <ul className="space-y-1">
               <li>
-                <Link to="/about" className="hover:text-white">
+                <Link to="/" className="hover:text-white">
                   Terms &amp; conditions
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-white">
+                <Link to="/" className="hover:text-white">
                   Privacy policy
                 </Link>
               </li>
               <li>
-                <Link to="/popular-turfs" className="hover:text-white">
+                <Link to="/" className="hover:text-white">
                   Refund policy
                 </Link>
               </li>
