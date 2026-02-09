@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api";
 import { toast } from "react-toastify";
-import SlotSelector from "../components/SlotSelector";
+import SlotSelector from "../components/Slotselector";
 import BookingSummary from "../components/BookingSummary";
 
 export default function TurfDetail() {
