@@ -3,10 +3,8 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
-DEBUG = os.getenv("DEBUG", "False") == "True"
 
-if DEBUG:
-    load_dotenv()
+load_dotenv()
 
 PAYMENT_WINDOW_MINUTES = 15
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,11 +42,17 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv("CLOUDINARY_API_SECRET"),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # ok temporarily
+CORS_ALLOW_ALL_ORIGINS = True 
+
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
