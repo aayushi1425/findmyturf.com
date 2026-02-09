@@ -10,32 +10,13 @@ if DEBUG:
 
 PAYMENT_WINDOW_MINUTES = 15
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-secret-for-dev-only")
-DEBUG = os.getenv("DEBUG", "False") == "True"
-
-RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
-CSRF_TRUSTED_ORIGINS = []
-
-if RENDER_EXTERNAL_HOSTNAME:
-    CSRF_TRUSTED_ORIGINS.append(
-        f"https://{RENDER_EXTERNAL_HOSTNAME}"
-    )
-
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-
-
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-
-
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
+SECRET_KEY = 'django-insecure-z9l(xfyk5i0ruehq8d!eqk97_x^qeiixnjn23^h#mf4wwji)yu'
+DEBUG = True
+RAZORPAY_WEBHOOK_HOST = os.getenv("RAZORPAY_WEBHOOK_HOST") or ""
+ALLOWED_HOSTS = [
+    RAZORPAY_WEBHOOK_HOST ,
+    "*"
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',

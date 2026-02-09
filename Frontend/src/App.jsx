@@ -26,34 +26,36 @@ export default function App() {
         <div>
             <Header />
             <ToastContainer />
-            <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+            <div className="mt-15">
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
 
-                <Route path="/" element={<LandingPage />} />
-                <Route path="turfs" element={<TurfPage />} />
-                <Route path="/turf/:id" element={<TurfDetail />} />
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="turfs" element={<TurfPage />} />
+                    <Route path="/turf/:id" element={<TurfDetail />} />
 
-                {/* Static / marketing pages */}
-                <Route path="/about" element={<About />}  />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/popular-turfs" element={<PopularTurfs />} />
-                <Route path="/sports" element={<SportsCategories />} />
+                    {/* Static / marketing pages */}
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/popular-turfs" element={<PopularTurfs />} />
+                    <Route path="/sports" element={<SportsCategories />} />
 
-                <Route path="/booking/:id" element={<BookingDetail />} />
-                <Route path="/my-bookings" element={<MyBookings />} />
-                <Route path="/owner/turfs" element={<MyTurfs />} />
-                <Route path="/owner">
-                    <Route path="turfs" element={<MyTurfs />} />
-                    <Route path="add-turf" element={<AddTurf />} />
-                    <Route path="turf/:turfId/edit" element={<EditTurf />} />
-                    <Route path="turf/:turfId/bookings" element={<OwnerTurfBookings />} />
-                    <Route path="turf/:turfId/courts/add" element={<AddCourt />} />
-                    <Route path="turf/:turfId/courts" element={<MyCourts />} />
-                    <Route path="court/:courtId/edit" element={<EditCourt />} />
-                    <Route path="/owner/feedbacks" element={<OwnerFeedbacks />} />
-                </Route>
-            </Routes>
+                    <Route path="/booking/:id" element={<BookingDetail />} />
+                    <Route path="/my-bookings" element={<MyBookings />} />
+                    <Route path="/owner/turfs" element={<MyTurfs />} />
+                    <Route path="/owner">
+                        <Route path="turfs" element={<MyTurfs />} />
+                        <Route path="add-turf" element={<AddTurf />} />
+                        <Route path="turf/:turfId/edit" element={<EditTurf />} />
+                        <Route path="turf/:turfId/bookings" element={<OwnerTurfBookings />} />
+                        <Route path="turf/:turfId/courts/add" element={<AddCourt />} />
+                        <Route path="turf/:turfId/courts" element={<MyCourts />} />
+                        <Route path="court/:courtId/edit" element={<EditCourt />} />
+                        <Route path="/owner/feedbacks" element={<OwnerFeedbacks />} />
+                    </Route>
+                </Routes>
+            </div>
         </div>
     )
 
