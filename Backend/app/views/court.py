@@ -14,16 +14,15 @@ class CourtCreateView(APIView):
         serializer = CourtSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        turf_id = request.data.get("turf")
-        if not turf_id:
+        slug = request.data.get("slug")
+        if not slug:
             return Response({"error": "turf is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             turf = Turf.objects.get(
-                id=turf_id,
-                business__user=request.user,
+                slug=slug
             )
         except Turf.DoesNotExist:
             return Response({"error": "Turf not found or not owned by you"},

@@ -32,7 +32,7 @@ class TurfUpdateView(APIView):
 
     def patch(self, request, slug):
         try:
-            turf = Turf.objects.get(id=slug, business__user=request.user)
+            turf = Turf.objects.get(slug=slug, business__user=request.user)
         except Turf.DoesNotExist:
             return Response({"error": "Turf not found"},
                 status=status.HTTP_404_NOT_FOUND,

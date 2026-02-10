@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api";
 
 export default function EditTurf() {
-    const { turfId } = useParams();
+    const { slug } = useParams();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -14,14 +14,15 @@ export default function EditTurf() {
         state: "",
         latitude: "",
         longitude: "",
+        amenities: [],
         opening_time: "",
         closing_time: "",
         is_open: true,
     });
 
+    const [newAmenity, setNewAmenity] = useState(""); // temporary input for new amenity
     const [images, setImages] = useState([]);
     const [newImages, setNewImages] = useState([]);
-
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
@@ -34,7 +35,7 @@ export default function EditTurf() {
 
     async function fetchTurf() {
         try {
-            const res = await api.get(`/turf/${turfId}/`);
+            const res = await api.get(`/turf/${slug}/`);
             const t = res.data;
 
             setForm({
@@ -45,6 +46,12 @@ export default function EditTurf() {
                 state: t.state || "",
                 latitude: t.latitude ?? "",
                 longitude: t.longitude ?? "",
+                amenities: Array.isArray(t.amenities)
+                    ? t.amenities
+                    : (t.amenities || "")
+                        .split(",")
+                        .map((a) => a.trim())
+                        .filter(Boolean),
                 opening_time: t.opening_time?.slice(0, 5) || "",
                 closing_time: t.closing_time?.slice(0, 5) || "",
                 is_open: t.is_open,
@@ -81,12 +88,9 @@ export default function EditTurf() {
     async function uploadImage(file) {
         const formData = new FormData();
         formData.append("image", file);
-
-        await api.post(
-            `/turf/${turfId}/image/upload/`,
-            formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        await api.post(`/turf/${slug}/image/upload/`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
     }
 
     async function setDefaultImage(imageId) {
@@ -106,7 +110,7 @@ export default function EditTurf() {
         setError("");
 
         try {
-            await api.patch(`/turf/${turfId}/update/`, {
+            await api.patch(`/turf/${slug}/update/`, {
                 ...form,
                 latitude: form.latitude ? parseFloat(form.latitude) : null,
                 longitude: form.longitude ? parseFloat(form.longitude) : null,
@@ -123,6 +127,8 @@ export default function EditTurf() {
             setSaving(false);
         }
     }
+
+    if (loading) return <p className="p-8 text-center">Loading...</p>;
 
     return (
         <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
@@ -141,22 +147,93 @@ export default function EditTurf() {
 
                     {/* BASIC INFO */}
                     <section className="space-y-4">
-                        <input className="input" name="name" value={form.name} onChange={handleChange} />
-                        <textarea className="input" name="description" value={form.description} onChange={handleChange} />
-                        <input className="input" name="location" value={form.location} onChange={handleChange} />
+                        <input
+                            className="input"
+                            name="name"
+                            value={form.name}
+                            onChange={handleChange}
+                            placeholder="Turf Name"
+                        />
+                        <textarea
+                            className="input"
+                            name="description"
+                            value={form.description}
+                            onChange={handleChange}
+                            placeholder="Description"
+                        />
+                        <input
+                            className="input"
+                            name="location"
+                            value={form.location}
+                            onChange={handleChange}
+                            placeholder="Location"
+                        />
+
+                        {/* ✅ AMENITIES TAGS */}
+                        <section className="space-y-2">
+                            <h2 className="font-semibold text-slate-900">Amenities</h2>
+                            <div className="flex flex-wrap gap-2">
+                                {form.amenities.map((a, i) => (
+                                    <span
+                                        key={i}
+                                        className="bg-slate-200 text-slate-900 px-3 py-1 rounded-full flex items-center gap-1"
+                                    >
+                                        {a}
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    amenities: prev.amenities.filter((_, idx) => idx !== i),
+                                                }))
+                                            }
+                                            className="text-red-500 font-bold"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Add an amenity and press Enter"
+                                className="input"
+                                value={newAmenity}
+                                onChange={(e) => setNewAmenity(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && newAmenity.trim()) {
+                                        e.preventDefault();
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            amenities: [...prev.amenities, newAmenity.trim()],
+                                        }));
+                                        setNewAmenity("");
+                                    }
+                                }}
+                            />
+                        </section>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <input className="input" name="city" value={form.city} onChange={handleChange} />
-                            <input className="input" name="state" value={form.state} onChange={handleChange} />
+                            <input
+                                className="input"
+                                name="city"
+                                value={form.city}
+                                onChange={handleChange}
+                                placeholder="City"
+                            />
+                            <input
+                                className="input"
+                                name="state"
+                                value={form.state}
+                                onChange={handleChange}
+                                placeholder="State"
+                            />
                         </div>
                     </section>
 
                     {/* LOCATION COORDINATES */}
                     <section className="space-y-4">
-                        <h2 className="font-semibold text-slate-900">
-                            Location Coordinates
-                        </h2>
-
+                        <h2 className="font-semibold text-slate-900">Location Coordinates</h2>
                         <div className="grid grid-cols-2 gap-4">
                             <input
                                 className="input"
@@ -179,12 +256,9 @@ export default function EditTurf() {
                         </div>
                     </section>
 
-                    {/* ✅ OPERATING HOURS */}
+                    {/* OPERATING HOURS */}
                     <section className="space-y-4">
-                        <h2 className="font-semibold text-slate-900">
-                            Operating Hours
-                        </h2>
-
+                        <h2 className="font-semibold text-slate-900">Operating Hours</h2>
                         <div className="grid grid-cols-2 gap-4">
                             <input
                                 className="input"
@@ -206,11 +280,16 @@ export default function EditTurf() {
                     {/* IMAGES */}
                     <section className="space-y-4">
                         <h2 className="font-semibold">Turf Images</h2>
-
                         <div className="grid grid-cols-3 gap-4">
                             {images.map((img) => (
-                                <div key={img.id} className="relative border rounded-xl overflow-hidden">
-                                    <img src={img.image_url} className="h-28 w-full object-cover" />
+                                <div
+                                    key={img.id}
+                                    className="relative border rounded-xl overflow-hidden"
+                                >
+                                    <img
+                                        src={img.image_url}
+                                        className="h-28 w-full object-cover"
+                                    />
 
                                     {img.is_default && (
                                         <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
@@ -240,7 +319,7 @@ export default function EditTurf() {
                             ))}
                         </div>
 
-                        {images.length < MAX_IMAGES && (
+                        {images.length + newImages.length < MAX_IMAGES && (
                             <>
                                 <input
                                     type="file"
@@ -249,10 +328,12 @@ export default function EditTurf() {
                                     onChange={handleNewImageSelect}
                                     className="block w-full text-sm"
                                 />
-
                                 <div className="grid grid-cols-3 gap-4">
                                     {newImages.map((file, i) => (
-                                        <div key={i} className="relative border rounded-xl overflow-hidden">
+                                        <div
+                                            key={i}
+                                            className="relative border rounded-xl overflow-hidden"
+                                        >
                                             <img
                                                 src={URL.createObjectURL(file)}
                                                 className="h-28 w-full object-cover"

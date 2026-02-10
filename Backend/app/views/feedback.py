@@ -63,7 +63,7 @@ class FeedbackCreateView(APIView):
 
 class TurfFeedbacksView(APIView):
     def get(self, request):
-        turf_id = request.query_params.get("turf_id")
+        turf_id = request.query_params.get("tid")
 
         if not turf_id:
             return Response(

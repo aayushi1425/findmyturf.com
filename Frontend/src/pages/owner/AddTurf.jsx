@@ -99,7 +99,7 @@ export default function AddTurf() {
             const turfId = res.data.id;
 
             for (const img of images) {
-                await uploadTurfImage(turfId, img);
+                await uploadTurfImage(res.data.slug, img);
             }
 
             navigate(`/owner/turf/${turfId}/courts/add`);

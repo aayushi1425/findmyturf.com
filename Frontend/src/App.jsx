@@ -47,7 +47,7 @@ export default function App() {
                     <Route path="/owner">
                         <Route path="turfs" element={<MyTurfs />} />
                         <Route path="add-turf" element={<AddTurf />} />
-                        <Route path="turf/:turfId/edit" element={<EditTurf />} />
+                        <Route path="turf/edit/:slug" element={<EditTurf />} />
                         <Route path="turf/:turfId/bookings" element={<OwnerTurfBookings />} />
                         <Route path="turf/:turfId/courts/add" element={<AddCourt />} />
                         <Route path="turf/:turfId/courts" element={<MyCourts />} />

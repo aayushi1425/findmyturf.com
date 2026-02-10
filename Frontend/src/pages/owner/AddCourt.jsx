@@ -43,7 +43,7 @@ export default function AddCourt() {
 
     try {
       await api.post("/court/create/", {
-        turf: turfId,
+        slug: turfId,
         sports_type: form.sports_type,
         price: Number(form.price),
         length: Number(form.length),

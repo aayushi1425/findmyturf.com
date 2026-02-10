@@ -72,7 +72,7 @@ export default function MyBookings() {
                         {bookings.map((booking) => (
                             <div
                                 key={booking.id}
-                                onClick={() => navigate(`/booking/${booking.id}`)}
+                                onClick={() => navigate(`/booking/${booking.slug}`)}
                                 className="cursor-pointer rounded-lg bg-white/80 p-5 shadow-sm transition duration-300 hover:scale-105 hover:shadow-md"
                             >
                                 <div className="flex flex-col gap-4">

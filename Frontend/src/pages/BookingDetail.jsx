@@ -7,6 +7,35 @@ import Button from "../components/ui/button.jsx";
 import useRazorpayPayment from "../hooks/useRazorpayPayment.jsx";
 import { cancelBooking as cancelBookingApi } from "../booking.api.js";
 
+/* ---------------- STAR RATING ---------------- */
+function StarRating({ value, onChange, disabled = false }) {
+    return (
+        <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                    key={star}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => !disabled && onChange(star)}
+                    className={`text-3xl transition
+                        ${star <= value
+                            ? "text-amber-400"
+                            : "text-slate-300"
+                        }
+                        ${disabled
+                            ? "cursor-default"
+                            : "hover:scale-125"
+                        }
+                    `}
+                >
+                    ★
+                </button>
+            ))}
+        </div>
+    );
+}
+
+/* ---------------- MAIN ---------------- */
 export default function BookingDetail() {
     const { id } = useParams();
     const { payNow } = useRazorpayPayment();
@@ -14,8 +43,14 @@ export default function BookingDetail() {
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+
     const [timeLeftMs, setTimeLeftMs] = useState(null);
     const [isExpired, setIsExpired] = useState(false);
+
+    /* FEEDBACK */
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState("");
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
 
     /* ---------------- FETCH BOOKING ---------------- */
     useEffect(() => {
@@ -27,66 +62,60 @@ export default function BookingDetail() {
             setLoading(true);
             const res = await api.get(`/booking/${id}/`);
             setBooking(res.data);
-        } catch (err) {
-            console.error(err);
+        } catch {
             toast.error("Unable to load booking");
         } finally {
             setLoading(false);
         }
     }
 
+    /* ---------------- SYNC FEEDBACK FROM BACKEND ---------------- */
+    useEffect(() => {
+        if (booking?.feedback) {
+            setRating(booking.feedback.rating);
+            setComment(booking.feedback.comment || "");
+        }
+    }, [booking]);
+
     /* ---------------- EXPIRY TIMER ---------------- */
     useEffect(() => {
-        if (
-            !booking ||
-            booking.status === "CANCELLED" ||
-            booking.status === "CONFIRMED" ||
-            !booking.expiry
-        ) {
-            setIsExpired(false);
+        if (!booking || booking.status !== "PENDING" || !booking.expiry) {
             setTimeLeftMs(null);
+            setIsExpired(false);
             return;
         }
 
         const expiry = new Date(booking.expiry);
-        if (Number.isNaN(expiry.getTime())) return;
 
-        const update = () => {
-            const diff = expiry.getTime() - Date.now();
+        const tick = () => {
+            const diff = expiry - Date.now();
             if (diff <= 0) {
                 setIsExpired(true);
                 setTimeLeftMs(0);
             } else {
-                setIsExpired(false);
                 setTimeLeftMs(diff);
             }
         };
 
-        update();
-        const interval = setInterval(update, 1000);
-        return () => clearInterval(interval);
+        tick();
+        const i = setInterval(tick, 1000);
+        return () => clearInterval(i);
     }, [booking]);
 
     const formatTimeLeft = (ms) => {
-        if (ms == null) return "";
-        const totalSeconds = Math.ceil(ms / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return `${minutes.toString().padStart(2, "0")}:${seconds
-            .toString()
-            .padStart(2, "0")}`;
+        const s = Math.ceil(ms / 1000);
+        return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(
+            s % 60
+        ).padStart(2, "0")}`;
     };
 
     /* ---------------- ACTIONS ---------------- */
     const handleCancel = async () => {
-        const ok = window.confirm("Are you sure you want to cancel this booking?");
-        if (!ok) return;
-
+        if (!window.confirm("Cancel this booking?")) return;
         setActionLoading(true);
-
         try {
             await cancelBookingApi(id);
-            toast.success("Booking cancelled successfully");
+            toast.success("Booking cancelled");
             fetchBooking();
         } catch {
             toast.error("Unable to cancel booking");
@@ -96,13 +125,12 @@ export default function BookingDetail() {
     };
 
     const handlePayment = async () => {
-        if (!booking || isExpired) {
-            toast.error("Payment window has expired");
+        if (isExpired) {
+            toast.error("Payment window expired");
             return;
         }
 
         setActionLoading(true);
-
         try {
             await payNow({
                 booking,
@@ -110,26 +138,35 @@ export default function BookingDetail() {
                     toast.success("Payment successful 🎉");
                     fetchBooking();
                 },
-                onError: () => {
-                    toast.error("Payment failed. Please try again.");
-                },
+                onError: () => toast.error("Payment failed"),
             });
-        } catch {
-            toast.error("Payment initialization failed");
         } finally {
             setActionLoading(false);
         }
     };
 
-    const openGoogleMaps = () => {
-        if (!booking) return;
-        const query = `${booking.turf_location}, ${booking.turf_city}, ${booking.turf_state}`;
-        window.open(
-            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                query
-            )}`,
-            "_blank"
-        );
+    /* ---------------- FEEDBACK ---------------- */
+    const submitFeedback = async () => {
+        if (rating === 0) {
+            toast.error("Please select a rating");
+            return;
+        }
+
+        setFeedbackLoading(true);
+        try {
+            await api.post("/feedback/create/", {
+                booking: booking.id,
+                rating,
+                comment,
+            });
+
+            toast.success("Thanks for your feedback ❤️");
+            await fetchBooking();
+        } catch {
+            toast.error("Unable to submit feedback");
+        } finally {
+            setFeedbackLoading(false);
+        }
     };
 
     /* ---------------- LOADING ---------------- */
@@ -139,7 +176,6 @@ export default function BookingDetail() {
                 <div className="mx-auto max-w-4xl space-y-6">
                     <CourtCardShimmer />
                     <CourtCardShimmer />
-                    <CourtCardShimmer />
                 </div>
             </div>
         );
@@ -147,121 +183,137 @@ export default function BookingDetail() {
 
     if (!booking) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50 text-red-500">
+            <div className="flex min-h-screen items-center justify-center text-red-500">
                 Booking not found
             </div>
         );
     }
 
-    /* ---------------- UI ---------------- */
     const statusColor = {
         PENDING: "bg-yellow-100 text-yellow-700",
-        CONFIRMED: "bg-green-100 text-green-700",
-        CANCELLED: "bg-red-100 text-red-700",
+        CONFIRMED: "bg-emerald-100 text-emerald-700",
+        CANCELLED: "bg-rose-100 text-rose-700",
         REFUNDED: "bg-blue-100 text-blue-700",
     };
 
     return (
         <div className="min-h-screen bg-slate-50 px-4 py-10">
-            <div className="mx-auto max-w-5xl space-y-8">
-                {/* HEADER CARD */}
-                <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+            <div className="mx-auto max-w-4xl space-y-8">
+
+                {/* HEADER */}
+                <div className="rounded-3xl bg-white shadow-md overflow-hidden">
                     <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-6 text-white">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-                            <div>
-                                <p className="text-xs uppercase tracking-widest text-slate-300">
-                                    Booking detail
-                                </p>
-                                <h1 className="mt-1 text-2xl font-semibold">
-                                    {booking.turf_name}
-                                </h1>
-                                <p className="mt-1 text-sm text-slate-300">
-                                    {booking.turf_location}, {booking.turf_city},{" "}
-                                    {booking.turf_state}
-                                </p>
-                            </div>
-
-                            <div className="flex flex-col items-end gap-3">
-                                <span
-                                    className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColor[booking.status]}`}
-                                >
-                                    {booking.status}
-                                </span>
-
-                                <button
-                                    onClick={openGoogleMaps}
-                                    className="rounded-full bg-amber-400 px-4 py-1.5 text-xs font-semibold text-slate-900 hover:bg-amber-300"
-                                >
-                                    📍 Open location
-                                </button>
-                            </div>
-                        </div>
+                        <h1 className="text-2xl font-semibold">
+                            {booking.turf_name}
+                        </h1>
+                        <p className="text-sm text-slate-300">
+                            {booking.turf_location}, {booking.turf_city}
+                        </p>
                     </div>
 
-                    {/* BODY */}
-                    <div className="space-y-4 bg-slate-50 p-6">
-                        <div className="flex justify-between rounded-2xl bg-white p-4 shadow-sm">
-                            <span className="text-sm text-slate-500">Time</span>
+                    <div className="p-6 space-y-4 bg-slate-50">
+                        <div className="flex justify-between rounded-xl bg-white p-4 shadow-sm">
+                            <span className="text-slate-500">Time</span>
                             <span className="font-semibold">
                                 {booking.start_time.slice(0, 5)} –{" "}
                                 {booking.end_time.slice(0, 5)}
                             </span>
                         </div>
 
-                        <div className="flex justify-between rounded-2xl bg-white p-4 shadow-sm">
-                            <span className="text-sm text-slate-500">Date</span>
-                            <span className="font-semibold">{booking.booking_date}</span>
+                        <div className="flex justify-between rounded-xl bg-white p-4 shadow-sm">
+                            <span className="text-slate-500">Date</span>
+                            <span className="font-semibold">
+                                {booking.booking_date}
+                            </span>
                         </div>
 
-                        <div className="flex justify-between rounded-2xl bg-white p-4 shadow-sm">
-                            <span className="text-sm text-slate-500">Total amount</span>
-                            <span className="text-xl font-bold">₹{booking.amount}</span>
+                        <div className="flex justify-between rounded-xl bg-white p-4 shadow-sm">
+                            <span className="text-slate-500">Amount</span>
+                            <span className="text-xl font-bold">
+                                ₹{booking.amount}
+                            </span>
                         </div>
+
+                        <span
+                            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusColor[booking.status]}`}
+                        >
+                            {booking.status}
+                        </span>
                     </div>
                 </div>
 
                 {/* ACTIONS */}
-                {booking.status !== "CANCELLED" &&
-                    booking.status !== "CONFIRMED" && (
-                        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                            <Button
-                                variant="secondary"
-                                onClick={handleCancel}
-                                disabled={actionLoading}
-                            >
-                                Cancel booking
-                            </Button>
-
-                            {booking.payment_status === "INITIATED" && (
-                                <Button
-                                    onClick={handlePayment}
-                                    disabled={actionLoading || isExpired}
-                                >
-                                    {actionLoading ? "Processing…" : "Pay now"}
-                                </Button>
-                            )}
-                        </div>
-                    )}
-
-                {/* TIMER */}
-                {!isExpired &&
-                    timeLeftMs !== null &&
-                    booking.payment_status === "INITIATED" && (
-                        <p
-                            className={`text-sm ${timeLeftMs < 60000 ? "text-rose-600" : "text-slate-600"
-                                }`}
+                {booking.status === "PENDING" && (
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            variant="secondary"
+                            onClick={handleCancel}
+                            disabled={actionLoading}
                         >
-                            Complete payment within{" "}
-                            <span className="font-semibold">
-                                {formatTimeLeft(timeLeftMs)}
-                            </span>
-                        </p>
-                    )}
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handlePayment}
+                            disabled={isExpired || actionLoading}
+                        >
+                            Pay now
+                        </Button>
+                    </div>
+                )}
 
-                {isExpired && (
-                    <p className="text-sm text-rose-600">
-                        Payment window has expired. Please create a new booking.
+                {!isExpired && timeLeftMs && booking.status === "PENDING" && (
+                    <p className="text-sm text-slate-600">
+                        Complete payment within{" "}
+                        <span className="font-semibold">
+                            {formatTimeLeft(timeLeftMs)}
+                        </span>
                     </p>
+                )}
+
+                {/* ⭐ FEEDBACK */}
+                {booking.status === "CONFIRMED" && (
+                    <div className="rounded-3xl bg-white p-6 shadow-md space-y-5">
+                        <h2 className="text-lg font-semibold">
+                            {booking.feedback
+                                ? "Your feedback"
+                                : "How was your experience?"}
+                        </h2>
+
+                        <StarRating
+                            value={rating}
+                            onChange={setRating}
+                            disabled={!!booking.feedback}
+                        />
+
+                        <textarea
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            rows={3}
+                            disabled={!!booking.feedback}
+                            placeholder="Tell us what went well (optional)"
+                            className={`w-full rounded-xl border px-4 py-2 text-sm focus:outline-none
+                                ${booking.feedback
+                                    ? "bg-slate-100 border-slate-200 cursor-not-allowed"
+                                    : "border-slate-200 focus:border-slate-900"
+                                }
+                            `}
+                        />
+
+                        {!booking.feedback ? (
+                            <Button
+                                onClick={submitFeedback}
+                                disabled={feedbackLoading}
+                            >
+                                {feedbackLoading
+                                    ? "Submitting…"
+                                    : "Submit feedback"}
+                            </Button>
+                        ) : (
+                            <div className="rounded-xl bg-emerald-50 p-4 text-emerald-700 text-sm">
+                                ✅ Feedback already submitted. Thanks for sharing!
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         </div>

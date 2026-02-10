@@ -1,21 +1,36 @@
-import { useEffect, useState } from "react";
-import  api  from "../../api";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import api from "../../api";
 
-function OwnerFeedbacks() {
+// Custom hook to parse query parameters
+function useQuery() {
+    return new URLSearchParams(useLocation().search);
+}
+
+export default function OwnerFeedbacks() {
+    const query = useQuery();
+    const tid = query.get("tid"); // Get tid from URL query params
+
     const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log("Turf ID:", tid);
+        if (!tid) return; // don't fetch if no tid
+
         const load = async () => {
             try {
-                const { data } = await api.get("/owner/feedbacks/");
+                const { data } = await api.get(`feedback/turf/?tid=${tid}`);
                 setFeedbacks(data);
+            } catch (error) {
+                console.error("Failed to load feedback:", error);
             } finally {
                 setLoading(false);
             }
         };
+
         load();
-    }, []);
+    }, [tid]);
 
     if (loading) {
         return (
@@ -44,7 +59,7 @@ function OwnerFeedbacks() {
                 </div>
             )}
 
-            {/* Cards */}
+            {/* Feedback cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {feedbacks.map((fb) => (
                     <div
@@ -52,18 +67,15 @@ function OwnerFeedbacks() {
                         className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-lg hover:-translate-y-0.5"
                     >
                         <div className="flex items-center justify-between">
-                            <h2 className="font-semibold text-slate-900">
-                                {fb.turf_name}
-                            </h2>
-
+                            <h2 className="font-semibold text-slate-900">{fb.turf_name}</h2>
                             <span className="text-amber-400 text-lg">
-                                {"★".repeat(fb.average_rating)}
-                                {"☆".repeat(5 - fb.average_rating)}
+                                {"★".repeat(fb.rating)}
+                                {"☆".repeat(5 - fb.rating)}
                             </span>
                         </div>
 
                         <p className="text-slate-600 mt-3 text-sm leading-relaxed">
-                            {fb.message}
+                            {fb.comment}
                         </p>
 
                         <div className="text-xs text-slate-400 mt-4">
@@ -75,5 +87,3 @@ function OwnerFeedbacks() {
         </div>
     );
 }
-
-export default OwnerFeedbacks;
