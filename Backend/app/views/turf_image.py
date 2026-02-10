@@ -13,17 +13,17 @@ from app.permission import IsOwner
 class TurfImageUploadView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
-    def post(self, request, turf_id):
+    def post(self, request, slug):
         try:
             turf = Turf.objects.select_related("business__user").get(
-                id=turf_id, business__user=request.user
+                slug=slug, business__user=request.user
             )
         except Turf.DoesNotExist:
             return Response({"error": "Turf not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        request.data["turf"] = turf_id
+        request.data["turf"] = turf.id
         serializer = TurfImageSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

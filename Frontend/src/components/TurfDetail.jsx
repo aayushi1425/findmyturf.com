@@ -76,6 +76,7 @@ export default function TurfDetail() {
 
             const courtsRes = await api.get(`/turf/${id}/courts/`);
             setCourts(courtsRes.data);
+            setSelectedCourt(courtsRes.data[0]);
         } catch (err) {
             console.error(err);
         } finally {

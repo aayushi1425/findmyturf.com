@@ -25,9 +25,9 @@ class OwnerTurfsView(APIView):
 class OwnerTurfBookingsView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
-    def get(self, request, turf_id):
+    def get(self, request, slug):
         try:
-            turf = Turf.objects.get(id=turf_id,
+            turf = Turf.objects.get(slug=slug,
                 business__user=request.user,
             )
         except Turf.DoesNotExist:
@@ -162,10 +162,10 @@ class OwnerTurfAnalyticsView(APIView):
 
     permission_classes = [IsAuthenticated, IsOwner]
 
-    def get(self, request, turf_id):
+    def get(self, request, slug):
         try:
             turf = Turf.objects.get(
-                id=turf_id,
+                slug=slug,
                 business__user=request.user,
             )
         except Turf.DoesNotExist:

@@ -7,15 +7,15 @@ export default function Hero() {
   return (
     <section className="relative flex-1 bg-[url('https://images.pexels.com/photos/399187/pexels-photo-399187.jpeg?auto=compress&cs=tinysrgb&w=1600')] bg-fixed bg-cover bg-center bg-no-repeat">
 
-  {/* DARK DIM OVERLAY */}
-  <div className="absolute inset-0 bg-black/35" />
+      {/* DARK DIM OVERLAY */}
+      <div className="absolute inset-0 bg-black/35" />
 
-  {/* optional gradient depth */}
-  <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
+      {/* optional gradient depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
 
-  <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col justify-center px-6 py-12 lg:flex-row lg:items-center lg:gap-12">
+      <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col justify-center px-6 py-12 lg:flex-row lg:items-center lg:gap-12">
 
-      {/* <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col justify-center px-6 py-12 lg:flex-row lg:items-center lg:gap-12"> */}
+        {/* <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col justify-center px-6 py-12 lg:flex-row lg:items-center lg:gap-12"> */}
 
         {/* LEFT COPY */}
         <div className="max-w-xl space-y-6 text-white">

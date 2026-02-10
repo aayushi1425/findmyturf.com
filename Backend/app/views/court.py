@@ -68,14 +68,14 @@ class CourtUpdateView(APIView):
         )
 
 class TurfCourtsView(APIView):
-    def get(self, request, turf_id):
+    def get(self, request, slug):
         if request.user.is_authenticated and request.user.user_type == "OWNER":
             courts = Court.objects.filter(
-                turf_id=turf_id,
+                turf = Turf.objects.get(slug=slug),
             )
         else:
             courts = Court.objects.filter(
-                turf_id=turf_id,
+                turf = Turf.objects.get(slug=slug),
                 is_open=True,
             )
 

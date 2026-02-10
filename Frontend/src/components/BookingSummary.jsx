@@ -1,46 +1,61 @@
-export default function BookingSummary({ selectedSlots, price }) {
-    if (!selectedSlots || selectedSlots.length === 0) return null;
+export default function BookingSummary({ selectedSlots = [], price = 0 }) {
+    if (!Array.isArray(selectedSlots) || selectedSlots.length === 0) return null;
 
-    const startTime = selectedSlots[0].start_time;
-    const endTime = selectedSlots[selectedSlots.length - 1].end_time;
-    const hours = selectedSlots.length;
-    const totalAmount = hours * price;
+    const sortedSlots = [...selectedSlots].sort(
+        (a, b) => a.start_time.localeCompare(b.start_time)
+    );
+
+    const startTime = sortedSlots[0].start_time;
+    const endTime = sortedSlots[sortedSlots.length - 1].end_time;
+    const hours = sortedSlots.length;
+    const totalAmount = hours * Number(price || 0);
+
+    const formatCurrency = (value) => `₹${value.toLocaleString("en-IN")}`;
 
     return (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white/80 p-5 shadow-sm transition duration-300 hover:scale-105">
-            <h3 className="mb-3 text-sm font-semibold text-slate-900">
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+            <h3 className="mb-4 text-sm font-semibold tracking-wide text-slate-900">
                 Booking Summary
             </h3>
 
-            <div className="space-y-2 text-sm text-slate-700">
-                <div className="flex justify-between">
-                    <span>Time Slot</span>
-                    <span className="font-medium">
-                        {startTime} – {endTime}
-                    </span>
-                </div>
+            <div className="space-y-3 text-sm text-slate-700">
+                <ReminderRow
+                    label="Time Slot"
+                    value={`${startTime} – ${endTime}`}
+                />
 
-                <div className="flex justify-between">
-                    <span>Duration</span>
-                    <span className="font-medium">
-                        {hours} {hours > 1 ? "hours" : "hour"}
-                    </span>
-                </div>
+                <ReminderRow
+                    label="Duration"
+                    value={`${hours} ${hours > 1 ? "hours" : "hour"}`}
+                />
 
-                <div className="flex justify-between">
-                    <span>Price / hour</span>
-                    <span className="font-medium">₹{price}</span>
-                </div>
+                <ReminderRow
+                    label="Price / hour"
+                    value={formatCurrency(price)}
+                />
 
-                <div className="border-t pt-3 flex justify-between items-center">
+                <div className="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
                     <span className="text-sm font-semibold text-slate-900">
                         Total Payable
                     </span>
                     <span className="text-xl font-bold text-slate-900">
-                        ₹{totalAmount}
+                        {formatCurrency(totalAmount)}
                     </span>
                 </div>
             </div>
+
+            <p className="mt-3 text-xs text-slate-500">
+                Slots are reserved temporarily. Please complete payment to confirm.
+            </p>
+        </div>
+    );
+}
+
+function ReminderRow({ label, value }) {
+    return (
+        <div className="flex items-center justify-between">
+            <span>{label}</span>
+            <span className="font-medium text-slate-900">{value}</span>
         </div>
     );
 }

@@ -30,9 +30,9 @@ class TurfCreateView(APIView):
 class TurfUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsOwner]
 
-    def patch(self, request, turf_id):
+    def patch(self, request, slug):
         try:
-            turf = Turf.objects.get(id=turf_id, business__user=request.user)
+            turf = Turf.objects.get(id=slug, business__user=request.user)
         except Turf.DoesNotExist:
             return Response({"error": "Turf not found"},
                 status=status.HTTP_404_NOT_FOUND,
@@ -107,6 +107,8 @@ class TurfListView(APIView):
             results = TurfSerializer(queryset, many=True).data
 
         for result in results:
+            result['average_rating'] = 5
+            continue;
             average_rating = Feedback.objects.filter(turf_id=result["id"]).aggregate(Avg('rating'))
             if average_rating['rating__avg']:
                 result['average_rating'] = average_rating['rating__avg']
@@ -118,9 +120,9 @@ class TurfListView(APIView):
 
 
 class TurfDetailView(APIView):
-    def get(self, request, turf_id):
+    def get(self, request , slug):        
         try:
-            turf = Turf.objects.get(id=turf_id, is_open=True)
+            turf = Turf.objects.get(slug=slug, is_open=True)
         except Turf.DoesNotExist:
             return Response({"error": "Turf not found"},
                 status=status.HTTP_404_NOT_FOUND,

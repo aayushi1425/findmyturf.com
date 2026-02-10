@@ -158,7 +158,7 @@ class FeedbackAdmin(admin.ModelAdmin):
         "user",
         "turf",
         "rating",
-        "message",
+        "comment",
         "created_at",
     )
 
@@ -171,7 +171,7 @@ class FeedbackAdmin(admin.ModelAdmin):
     search_fields = (
         "user__phone_no",
         "turf__name",
-        "message",
+        "comment",
     )
 
     readonly_fields = (
@@ -179,6 +179,6 @@ class FeedbackAdmin(admin.ModelAdmin):
         "user",
         "turf",
         "rating",
-        "message",
+        "comment",
         "created_at",
     )

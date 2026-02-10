@@ -1,11 +1,14 @@
 import uuid
 from django.db import models
+from django.utils.text import slugify
 from app.models.business import Business
+from django.contrib.postgres.fields import ArrayField
 
 class Turf(models.Model):
     id = models.UUIDField(primary_key = True, default = uuid.uuid4)
     business = models.ForeignKey(Business , on_delete = models.CASCADE)
-
+    slug = models.SlugField(max_length=255, blank=True, null=True)
+    amenities = ArrayField(models.CharField(max_length=100), blank=True, default=list)
     name = models.CharField(max_length = 100, null = True)
     description = models.TextField(null = True)
     location = models.CharField(max_length = 255, null = True)
@@ -36,3 +39,14 @@ class Turf(models.Model):
     @property
     def dimensions_display(self):
         return f"{self.length}m x {self.breadth}m x {self.height}m"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            count = 1
+            while Turf.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{count}"
+                count += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
