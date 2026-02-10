@@ -15,10 +15,11 @@ urlpatterns = [
     path("auth/register/owner/", OwnerRegisterView.as_view()),
     # Public
     path("turf/list/", TurfListView.as_view(), name="turf-list"),
-    path("turf/<slug:slug>/", TurfDetailView.as_view(), name="turf-detail"),
     path("turf/most-booked/", MostBookedTurfView.as_view(), name="most-booked-turf"),
     # turfs
     path("turf/create/", TurfCreateView.as_view()),
+    
+    path("turf/<slug:slug>/", TurfDetailView.as_view(), name="turf-detail"),
     path("turf/<slug:slug>/update/", TurfUpdateView.as_view()),
     path("turf/<slug:slug>/image/upload/", TurfImageUploadView.as_view()),
     path("turf/image/<uuid:image_id>/delete/", DeleteTurfImageView.as_view()),

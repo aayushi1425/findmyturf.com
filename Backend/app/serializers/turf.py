@@ -13,7 +13,6 @@ class TurfSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = [
             "id",
-            "amenities",
             "business",
             "created_at",
             "updated_at",
