@@ -35,6 +35,11 @@ class CourtAvailableSlotsView(APIView):
             court.turf.closing_time,
         )
 
+        if court.turf.is_open == False or court.is_open == False:
+            return Response({"available_slots": []},
+                status=status.HTTP_200_OK,
+            )
+
         bookings = Booking.objects.filter(
             court=court,
             booking_date=booking_date,
@@ -46,14 +51,26 @@ class CourtAvailableSlotsView(APIView):
             slot_start = slot["start_time"]
             slot_end = slot["end_time"]
 
-            conflict = bookings.filter(
-                start_time__lt=slot_end,
-                end_time__gt=slot_start,
-                status__in=BookingStatus.CONFIRMED,
-            ).exists()
+            is_confirmed = bookings.filter(start_time__lt=slot_end , end_time__gt=slot_start , status=BookingStatus.CONFIRMED)
+            is_pending = bookings.filter(start_time__lt=slot_end , end_time__gt=slot_start , status=BookingStatus.PENDING)
 
-            if not conflict:
+            if is_confirmed.exists():
                 available_slots.append({
+                        "available": False,
+                        "start_time": slot_start.strftime("%H:%M"),
+                        "end_time": slot_end.strftime("%H:%M"),
+                    }
+                )
+            elif is_pending.exists():
+                available_slots.append({
+                        "available": False,
+                        "start_time": slot_start.strftime("%H:%M"),
+                        "end_time": slot_end.strftime("%H:%M"),
+                    }
+                )
+            else:
+                available_slots.append({
+                        "available": True,
                         "start_time": slot_start.strftime("%H:%M"),
                         "end_time": slot_end.strftime("%H:%M"),
                     }

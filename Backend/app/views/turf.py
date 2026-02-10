@@ -122,7 +122,7 @@ class TurfListView(APIView):
 class TurfDetailView(APIView):
     def get(self, request , slug):        
         try:
-            turf = Turf.objects.get(slug=slug, is_open=True)
+            turf = Turf.objects.get(slug=slug)
         except Turf.DoesNotExist:
             return Response({"error": "Turf not found"},
                 status=status.HTTP_404_NOT_FOUND,

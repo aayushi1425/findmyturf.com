@@ -10,6 +10,7 @@ from app.utils.notify import notifyMessage
 from app.models.booking import Booking, BookingStatus, PaymentStatus
 from app.serializers.booking import BookingCreateSerializer , BookingSerializer, BookingDetailSerializer
 from app.utils.notify import notifyMessage
+from app.models.feedback import Feedback
 
 class BookingCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -113,6 +114,12 @@ class BookingDetailView(APIView):
 
         ResponseData = BookingDetailSerializer(booking).data
         ResponseData['expiry'] = booking.created_at + timedelta(minutes=settings.PAYMENT_WINDOW_MINUTES)
+        FeedbackData = Feedback.objects.filter(booking=booking)
+        if FeedbackData.exists():
+            ResponseData['feedback'] = {
+                'rating' : FeedbackData.first().rating,
+                'comment' : FeedbackData.first().comment
+            }
         return Response(ResponseData)
 
 

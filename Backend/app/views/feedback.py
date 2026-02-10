@@ -41,7 +41,7 @@ class FeedbackCreateView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if Feedback.objects.filter(booking=booking).exists():
+        if Feedback.objects.filter(booking_id=booking.id).exists():
             return Response(
                 {"error": "Feedback already exists for this booking"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -62,7 +62,7 @@ class FeedbackCreateView(APIView):
 
 
 class TurfFeedbacksView(APIView):
-    def get(self, request ):
+    def get(self, request):
         turf_id = request.query_params.get("turf_id")
 
         if not turf_id:
